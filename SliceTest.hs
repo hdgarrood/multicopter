@@ -3,13 +3,13 @@ module SliceTest where
 import System.Random
 import System.IO.Unsafe
 import Data.List
+import Data.Tuple (swap)
 import Slice
 
 sliceList :: (SliceGen a) => Int -> a -> [Slice]
 sliceList n =
-    take n . unfoldr (Just . fstsnd . nextSlice)
+    take n . unfoldr (Just . swap . nextSlice)
     where
-        fstsnd (a,b) = (b,a)
 
 exampleSliceGen :: StdSliceGen
 exampleSliceGen = StdSliceGen
