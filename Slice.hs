@@ -1,6 +1,7 @@
 module Slice where
 
 import System.Random
+import Data.Fixed (mod')
 
 -- A slice of the visible world. Players will spend most of the time across
 -- two slices. Has a roof, a floor, and sometimes a third obstacle in the
@@ -10,7 +11,7 @@ import System.Random
 -- A Slice is represented as a list of Doubles, which are the edges of the
 -- contained obstacles. We assume that we're starting inside an obstacle (since
 -- we will always have a roof)
--- All the doubles in a Slice should satisfy 0 <= x <= 1
+-- All the doubles in a Slice should satisfy 0 <= x <= 1 (?)
 type Slice = [Double]
 
 sliceHeight :: Double
@@ -58,7 +59,7 @@ data StdSliceGen =
                 -- slices
                 , maxDeviation :: Double
                 , slicesBetweenObstacles :: Int
-                }
+                } deriving (Show, Read)
 
 instance SliceGen StdSliceGen where
     nextSlice gen =
@@ -70,8 +71,12 @@ instance SliceGen StdSliceGen where
 -- deviation, and a maxiumum edge thickness, return a new RandomGen
 -- Double and an adjusted thickness
 -- TODO
-adjustThickness rgen th _ _ = (rgen, th)
+adjustThickness :: StdGen -> Double -> Double -> Double -> (StdGen, Double)
+adjustThickness rgen th maxD maxT =
+    let (delta, rgen') = randomR (0, maxD) rgen
+    in  (rgen', th + delta `mod'` maxT)
 
+makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeRoof (sgen, slice) =
     let rgen = randomGen sgen
         th = prevRoofThickness sgen
@@ -81,6 +86,7 @@ makeRoof (sgen, slice) =
         sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
     in (sgen', th' : slice)
 
+makeFloor :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeFloor (sgen, slice) =
     let rgen = randomGen sgen
         th = prevFloorThickness sgen
@@ -91,6 +97,7 @@ makeFloor (sgen, slice) =
         floorDist = sliceHeight - th'
     in (sgen', floorDist : slice)
 
+makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeObstacle (sgen, slice) = (sgen, slice)
     -- let slices = slicesToNextObstacle sgen
     --     makeObstacle' (sgen, slice) =

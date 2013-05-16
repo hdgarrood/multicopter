@@ -9,7 +9,6 @@ import Slice
 sliceList :: (SliceGen a) => Int -> a -> [Slice]
 sliceList n =
     take n . unfoldr (Just . swap . nextSlice)
-    where
 
 exampleSliceGen :: StdSliceGen
 exampleSliceGen = StdSliceGen
@@ -23,7 +22,7 @@ exampleSliceGen = StdSliceGen
     }
     
 showSlice :: Slice -> String
-showSlice slice = showSlice' scaled 'x'
+showSlice slice = "|" ++ showSlice' scaled 'x' ++ "|"
     where
         scaleFactor = 80
         scaled = map (floor . (* scaleFactor)) slice
