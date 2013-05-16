@@ -10,16 +10,18 @@ sliceList :: (SliceGen a) => Int -> a -> [Slice]
 sliceList n =
     take n . unfoldr (Just . swap . nextSlice)
 
-exampleSliceGen :: StdSliceGen
-exampleSliceGen = StdSliceGen
-    { prevRoofThickness = 0
-    , prevFloorThickness = 0
-    , slicesToNextObstacle = 5
-    , randomGen = unsafePerformIO getStdGen
-    , maxEdgeThickness = 0.1
-    , maxDeviation = 0.05
-    , slicesBetweenObstacles = 5
-    }
+getSliceGen :: IO StdSliceGen
+getSliceGen = do
+    gen <- getStdGen
+    return StdSliceGen
+        { prevRoofThickness = 0
+        , prevFloorThickness = 0
+        , slicesToNextObstacle = 5
+        , randomGen = gen
+        , edgeThicknessRange = (0.1, 0.3)
+        , maxDeviation = 0.025
+        , slicesBetweenObstacles = 5
+        }
 
 showSlice :: Slice -> String
 showSlice slice = "|" ++ sliceStr ++ "|"
@@ -36,11 +38,15 @@ showSlice slice = "|" ++ sliceStr ++ "|"
                 then ' '
                 else 'x') [1..80]
 
+showSlices :: [Slice] -> String
+showSlices =
+     unlines . map showSlice
+
 sliceTest :: IO ()
-sliceTest =
-    let sg = exampleSliceGen
-        slices = sliceList 20 sg
-    in mapM_ (putStrLn . showSlice) slices
+sliceTest = do
+    sg <- getSliceGen
+    let slices = sliceList 20 sg
+    mapM_ (putStrLn . showSlice) slices
 
 isSliceClear s a b =
     isSliceClear' s False

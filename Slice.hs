@@ -45,7 +45,6 @@ isSliceClear s a b =
 class SliceGen a where
     nextSlice :: a -> (a, Slice)
 
-
 data StdSliceGen =
     StdSliceGen { -- things that change --
                   prevRoofThickness :: Double
@@ -53,8 +52,8 @@ data StdSliceGen =
                 , slicesToNextObstacle :: Int
                 , randomGen :: StdGen
                   -- things that stay the same --
-                -- max floor and max roof thickness (they're the same)
-                , maxEdgeThickness :: Double
+                -- min/max floor and roof thickness (they're the same)
+                , edgeThicknessRange :: (Double,Double)
                 -- maximum deviation of floor or roof thickness in adjacent
                 -- slices
                 , maxDeviation :: Double
@@ -68,17 +67,19 @@ instance SliceGen StdSliceGen where
         makeRoof . makeObstacle . makeFloor $ (gen, [])
 
 -- given a RandomGen Double, a previous thickness, a maximum
--- deviation, and a maxiumum edge thickness, return a new RandomGen
+-- deviation, and a min/max edge thickness, return a new RandomGen
 -- Double and an adjusted thickness
--- TODO
-adjustThickness :: StdGen -> Double -> Double -> Double -> (StdGen, Double)
-adjustThickness rgen th maxD maxT =
-    let (delta, rgen') = randomR (0, maxD) rgen
-        adjustUntilSmaller a b =
-            if a < b
-                then a
-                else adjustUntilSmaller (a-b) b
-        th' = adjustUntilSmaller (th + delta) maxT
+adjustThickness :: StdGen ->
+    Double ->
+    Double ->
+    (Double, Double) ->
+    (StdGen, Double)
+adjustThickness rgen th maxD (minT, maxT) =
+    let (delta, rgen') = randomR (-maxD, maxD) rgen
+        th'
+            | (th + delta) < maxT = th + delta
+            | (th - delta) > minT = th - delta
+            | otherwise           = maxT -- this is totally arbitrary
     in  (rgen', th')
 
 makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
@@ -86,8 +87,8 @@ makeRoof (sgen, slice) =
     let rgen = randomGen sgen
         th = prevRoofThickness sgen
         maxDev = maxDeviation sgen
-        maxTh = maxEdgeThickness sgen
-        (rgen', th') = adjustThickness rgen th maxDev maxTh
+        rangeTh = edgeThicknessRange sgen
+        (rgen', th') = adjustThickness rgen th maxDev rangeTh
         sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
     in (sgen', th' : slice)
 
@@ -96,8 +97,8 @@ makeFloor (sgen, slice) =
     let rgen = randomGen sgen
         th = prevFloorThickness sgen
         maxDev = maxDeviation sgen
-        maxTh = maxEdgeThickness sgen
-        (rgen', th') = adjustThickness rgen th maxDev maxTh
+        rangeTh = edgeThicknessRange sgen
+        (rgen', th') = adjustThickness rgen th maxDev rangeTh
         sgen' = sgen { randomGen = rgen', prevFloorThickness = th' }
         floorDist = sliceHeight - th'
     in (sgen', floorDist : slice)
