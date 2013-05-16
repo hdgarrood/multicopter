@@ -74,7 +74,12 @@ instance SliceGen StdSliceGen where
 adjustThickness :: StdGen -> Double -> Double -> Double -> (StdGen, Double)
 adjustThickness rgen th maxD maxT =
     let (delta, rgen') = randomR (0, maxD) rgen
-    in  (rgen', th + delta `mod'` maxT)
+        adjustUntilSmaller a b =
+            if a < b
+                then a
+                else adjustUntilSmaller (a-b) b
+        th' = adjustUntilSmaller (th + delta) maxT
+    in  (rgen', th')
 
 makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeRoof (sgen, slice) =
