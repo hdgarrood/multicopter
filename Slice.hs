@@ -8,12 +8,14 @@ import Utils
 -- A slice of the visible world. Players will spend most of the time across
 -- two slices. Has a roof, a floor, and sometimes a third obstacle in the
 -- middle.
+--
 -- Obstacles are the exact same widths as the slice they occupy.
--- Additionally, they may occupy only one slice.
+--
 -- A Slice is represented as a list of Ints, which are the edges of the
--- contained obstacles. We assume that we're starting inside an obstacle (since
--- we will always have a roof)
--- All the doubles in a Slice should satisfy 0 <= x <= 1 (?)
+-- contained obstacles.
+--
+-- When checking whether a particular space in a slice is clear, we assume that
+-- we're starting inside an obstacle (since we will always have a roof).
 type Slice = [Int]
 
 -- Is an object occupying the vertical space from a to b colliding with any
