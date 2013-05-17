@@ -59,7 +59,7 @@ mkStdSliceGen def = do
     return StdSliceGen
         { prevRoofThickness = 0
         , prevFloorThickness = 0
-        , slicesToNextObstacle = 100
+        , slicesToNextObstacle = 5
         , randomGen = gen
         , sliceDefinition = def
         }
@@ -124,20 +124,21 @@ makeFloor (sgen, slice) =
     in (sgen', floorDist : slice)
 
 makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
-makeObstacle (sgen, slice) = (sgen, slice)
-    -- let slices = slicesToNextObstacle sgen
-    --     makeObstacle' (sgen, slice) =
-    --         let maxObstacleHeight = sliceHeight / 2
-    --             rgen = randomGen sgen
-    --             (rgen', obstacleHeight) = randomR (0, maxObstacleHeight) rgen
-    --             maxObstaclePos = sliceHeight - obstacleHeight
-    --             (rgen'', obstaclePos) = randomR (0, maxObstaclePos) rgen'
-    --             sgen' = sgen
-    --                 { randomGen = rgen'',
-    --                 , slicesToNextObstacle = slicesBetweenObstacles sgen
-    --                 }
-    --         in (sgen', obstacleHeight
-    -- in
-    --     if slices == 0
-    --         then makeObstacle' (sgen, slice)
-    --         else (sgen { slicesToNextObstacle = slices - 1 }, slice)
+makeObstacle (sgen, slice) =
+    let countSlices = slicesToNextObstacle sgen
+        def = sliceDefinition sgen
+        sliceHeight = height def
+        makeObstacle' (sgen, slice) =
+            let maxObstacleHeight = sliceHeight `div` 2
+                rgen = randomGen sgen
+                (obstacleHeight, rgen') = randomR (0, maxObstacleHeight) rgen
+                maxObstaclePos = sliceHeight - obstacleHeight
+                (obstaclePos, rgen'') = randomR (0, maxObstaclePos) rgen'
+                sgen' = sgen
+                    { randomGen = rgen''
+                    , slicesToNextObstacle = slicesBetweenObstacles def
+                    }
+            in (sgen', obstacleHeight : slice)
+    in if countSlices == 0
+        then makeObstacle' (sgen, slice)
+        else (sgen { slicesToNextObstacle = countSlices - 1 }, slice)
