@@ -24,22 +24,12 @@ isSliceClear s a b =
     where
         isSliceClear' slice state =
             case slice of
-             -- we've tested all the switches and the boundary is after them
-             -- all, so we're either completely outside or completely inside an
-             -- obstacle.
-             []     -> state
-             (x:xs) ->
-                if x < a
-                    -- we haven't reached the boundary yet -- recurse and flip
-                    -- the state
-                    then isSliceClear' xs (not state)
-                    else if x < b
-                        -- there's a switch inside our boundary, so there must
-                        -- be a collision either way.
-                        then False
-                        -- We're either completely clear of or completely
-                        -- inside an obstacle
-                        else state
+                []  -> state
+                xs  -> recurse xs state
+        recurse (x:xs) state
+            | x < a     = isSliceClear' xs (not state)
+            | x < b     = False
+            | otherwise = state
 
 class SliceGen a where
     nextSlice :: a -> (a, Slice)
@@ -72,11 +62,11 @@ mkStdSliceGen def = do
         , sliceDefinition = def
         }
 
--- instance SliceGen StdSliceGen where
---     nextSlice gen =
---         -- do it back-to-front so that we can build the list up backwards (for
---         -- efficiency)
---         makeRoof . makeObstacle . makeFloor $ (gen, [])
+instance SliceGen StdSliceGen where
+    nextSlice gen =
+        -- do it back-to-front so that we can build the list up backwards (for
+        -- efficiency)
+        makeRoof . makeObstacle . makeFloor $ (gen, [])
 
 -- Return a function which takes a double between 0 and 1 and returns a value
 -- which is more likely to be near the previous value, and guaranteed to not be
@@ -106,44 +96,46 @@ makeDistribution prevValue (minValue, maxValue) var =
         selectedIndex = length $ takeWhile (<= var) cumulatives
     in  selectedIndex - 1 + minValue
 
--- makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
--- makeRoof (sgen, slice) =
---     let rgen = randomGen sgen
---         th = prevRoofThickness sgen
---         def = sliceDefinition sgen
---         maxDev = maxDeviation def
---         rangeTh = edgeThicknessRange def
---         (rgen', th') = adjustThickness rgen th maxDev rangeTh
---         sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
---     in (sgen', th' : slice)
+makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
+makeRoof (sgen, slice) =
+    let rgen = randomGen sgen
+        th = prevRoofThickness sgen
+        def = sliceDefinition sgen
+        -- maxDev = maxDeviation def
+        rangeTh = edgeThicknessRange def
+        (val, rgen') = randomR (0, 1) rgen
+        th' = (makeDistribution th rangeTh) val
+        sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
+    in (sgen', th' : slice)
 
--- makeFloor :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
--- makeFloor (sgen, slice) =
---     let rgen = randomGen sgen
---         th = prevFloorThickness sgen
---         def = sliceDefinition sgen
---         maxDev = maxDeviation def
---         rangeTh = edgeThicknessRange def
---         (rgen', th') = adjustThickness rgen th maxDev rangeTh
---         sgen' = sgen { randomGen = rgen', prevFloorThickness = th' }
---         floorDist = (height $ sliceDefinition sgen) - th'
---     in (sgen', floorDist : slice)
+makeFloor :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
+makeFloor (sgen, slice) =
+    let rgen = randomGen sgen
+        th = prevFloorThickness sgen
+        def = sliceDefinition sgen
+        -- maxDev = maxDeviation def
+        rangeTh = edgeThicknessRange def
+        (val, rgen') = randomR (0, 1) rgen
+        th' = (makeDistribution th rangeTh) val
+        sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
+        floorDist = (height $ sliceDefinition sgen) - th'
+    in (sgen', floorDist : slice)
 
--- makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
--- makeObstacle (sgen, slice) = (sgen, slice)
---     -- let slices = slicesToNextObstacle sgen
---     --     makeObstacle' (sgen, slice) =
---     --         let maxObstacleHeight = sliceHeight / 2
---     --             rgen = randomGen sgen
---     --             (rgen', obstacleHeight) = randomR (0, maxObstacleHeight) rgen
---     --             maxObstaclePos = sliceHeight - obstacleHeight
---     --             (rgen'', obstaclePos) = randomR (0, maxObstaclePos) rgen'
---     --             sgen' = sgen
---     --                 { randomGen = rgen'',
---     --                 , slicesToNextObstacle = slicesBetweenObstacles sgen
---     --                 }
---     --         in (sgen', obstacleHeight
---     -- in
---     --     if slices == 0
---     --         then makeObstacle' (sgen, slice)
---     --         else (sgen { slicesToNextObstacle = slices - 1 }, slice)
+makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
+makeObstacle (sgen, slice) = (sgen, slice)
+    -- let slices = slicesToNextObstacle sgen
+    --     makeObstacle' (sgen, slice) =
+    --         let maxObstacleHeight = sliceHeight / 2
+    --             rgen = randomGen sgen
+    --             (rgen', obstacleHeight) = randomR (0, maxObstacleHeight) rgen
+    --             maxObstaclePos = sliceHeight - obstacleHeight
+    --             (rgen'', obstaclePos) = randomR (0, maxObstaclePos) rgen'
+    --             sgen' = sgen
+    --                 { randomGen = rgen'',
+    --                 , slicesToNextObstacle = slicesBetweenObstacles sgen
+    --                 }
+    --         in (sgen', obstacleHeight
+    -- in
+    --     if slices == 0
+    --         then makeObstacle' (sgen, slice)
+    --         else (sgen { slicesToNextObstacle = slices - 1 }, slice)
