@@ -1,7 +1,6 @@
 module Slice where
 
 import System.Random
-import Data.Fixed (mod')
 
 import Utils
 
@@ -138,7 +137,7 @@ makeObstacle (sgen, slice) =
                     { randomGen = rgen''
                     , slicesToNextObstacle = slicesBetweenObstacles def
                     }
-            in (sgen', obstacleHeight : slice)
+            in (sgen', obstacleHeight : obstaclePos : slice)
     in if countSlices == 0
         then makeObstacle' (sgen, slice)
         else (sgen { slicesToNextObstacle = countSlices - 1 }, slice)
