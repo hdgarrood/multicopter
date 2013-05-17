@@ -1,9 +1,8 @@
 module SliceTest where
 
-import System.Random
-import System.IO.Unsafe
 import Data.List
 import Data.Tuple (swap)
+
 import Slice hiding (isSliceClear)
 
 sliceList :: (SliceGen a) => Int -> a -> [Slice]
@@ -11,32 +10,21 @@ sliceList n =
     take n . unfoldr (Just . swap . nextSlice)
 
 getSliceGen :: IO StdSliceGen
-getSliceGen = do
-    gen <- getStdGen
-    return StdSliceGen
-        { prevRoofThickness = 0
-        , prevFloorThickness = 0
-        , slicesToNextObstacle = 5
-        , randomGen = gen
-        , edgeThicknessRange = (0.1, 0.3)
-        , maxDeviation = 0.025
-        , slicesBetweenObstacles = 5
-        }
+getSliceGen =
+    let def = SliceDef { edgeThicknessRange = (3, 3)
+                       , maxDeviation = 1
+                       , slicesBetweenObstacles = 5
+                       , height = 150
+                       }
+    in mkStdSliceGen def
 
 showSlice :: Slice -> String
 showSlice slice = "|" ++ sliceStr ++ "|"
     where
-        scaleFactor = 80
-        scaled = map (floor . (* scaleFactor)) slice
-        flip ch =
-            case ch of
-                ' ' -> 'x'
-                'x' -> ' '
-                _   -> error "wtf"
         sliceStr = map (\x ->
-            if isSliceClear scaled x x
+            if isSliceClear slice x x
                 then ' '
-                else 'x') [1..80]
+                else 'I') [1..150]
 
 showSlices :: [Slice] -> String
 showSlices =
