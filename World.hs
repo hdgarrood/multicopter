@@ -1,6 +1,8 @@
+{-# LANGUAGE OverloadedStrings #-}
 module World where
 
 import System.Random
+import Data.Aeson
 
 import Slice
 import SliceTest
@@ -47,6 +49,15 @@ data World =
           , worldDef :: WorldDef
           } deriving (Show, Read)
 
+makeWorld :: IO World
+makeWorld = do
+    let def = WorldDef { dimensions = Vect 20 150 }
+    gen <- getSliceGen
+    return World { slices = []
+                 , sliceGen = gen
+                 , worldDef = def
+                 }
+
 iterateWorld :: World -> World
 iterateWorld = shiftSlices
 
@@ -60,3 +71,9 @@ shiftSlices wl =
             | length sls == maxSlices wl = drop 1 sls'
             | otherwise                  = sls'
     in  wl { sliceGen = sgen', slices = sls'' }
+
+-- when sending Worlds back to the clients, they don't need to know about the
+-- world definition, or the slice generator. They only need to know about the
+-- slices.
+instance ToJSON World where
+    toJSON (World slices _ _) = object ["slices" .= slices]
