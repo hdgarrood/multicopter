@@ -49,7 +49,7 @@ data StdSliceGen =
                 , prevFloorThickness :: Int
                 , slicesToNextObstacle :: Int
                 , randomGen :: StdGen
-                , sliceDefinition :: SliceDef
+                , sliceDef :: SliceDef
                 } deriving (Show, Read)
 
 mkStdSliceGen :: SliceDef -> IO StdSliceGen
@@ -60,7 +60,7 @@ mkStdSliceGen def = do
         , prevFloorThickness = 0
         , slicesToNextObstacle = 5
         , randomGen = gen
-        , sliceDefinition = def
+        , sliceDef = def
         }
 
 instance SliceGen StdSliceGen where
@@ -101,7 +101,7 @@ makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeRoof (sgen, slice) =
     let rgen = randomGen sgen
         th = prevRoofThickness sgen
-        def = sliceDefinition sgen
+        def = sliceDef sgen
         -- maxDev = maxDeviation def
         rangeTh = edgeThicknessRange def
         (val, rgen') = randomR (0, 1) rgen
@@ -113,19 +113,19 @@ makeFloor :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeFloor (sgen, slice) =
     let rgen = randomGen sgen
         th = prevFloorThickness sgen
-        def = sliceDefinition sgen
+        def = sliceDef sgen
         -- maxDev = maxDeviation def
         rangeTh = edgeThicknessRange def
         (val, rgen') = randomR (0, 1) rgen
         th' = (makeDistribution th rangeTh) val
         sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
-        floorDist = (height $ sliceDefinition sgen) - th'
+        floorDist = (height $ sliceDef sgen) - th'
     in (sgen', floorDist : slice)
 
 makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
 makeObstacle (sgen, slice) =
     let countSlices = slicesToNextObstacle sgen
-        def = sliceDefinition sgen
+        def = sliceDef sgen
         sliceHeight = height def
         makeObstacle' (sgen, slice) =
             let maxObstacleHeight = sliceHeight `div` 2
