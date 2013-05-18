@@ -54,9 +54,9 @@ shiftSlices :: World -> World
 shiftSlices wl =
     let (sgen', newSlice) = nextSlice (sliceGen wl)
         sls = slices wl
-        sls'
-            | length sls == (vectX $ dimensions $ worldDef wl)
-                = sls
-            | otherwise
-                = drop 1 (slices wl) ++ [newSlice]
-    in  wl { sliceGen = sgen', slices = sls' }
+        sls' = sls ++ [newSlice]
+        maxSlices = vectX . dimensions . worldDef
+        sls''
+            | length sls == maxSlices wl = drop 1 sls'
+            | otherwise                  = sls'
+    in  wl { sliceGen = sgen', slices = sls'' }
