@@ -53,7 +53,7 @@ makeWorld :: IO World
 makeWorld = do
     let def = WorldDef { dimensions = Vect 20 150 }
     gen <- getSliceGen
-    return World { slices = []
+    return World { slices = replicate 20 [0]
                  , sliceGen = gen
                  , worldDef = def
                  }
