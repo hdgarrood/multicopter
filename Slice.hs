@@ -37,7 +37,7 @@ class SliceGen a where
 
 -- a definition of a slice -- parameter to a SliceGen
 data SliceDef =
-    SliceDef 
+    SliceDef
         { edgeThicknessRange :: (Int, Int)
         , maxDeviation :: Int
         , slicesBetweenObstacles :: Int
