@@ -141,3 +141,13 @@ makeObstacle (sgen, slice) =
     in if countSlices == 0
         then makeObstacle' (sgen, slice)
         else (sgen { slicesToNextObstacle = countSlices - 1 }, slice)
+
+-- Given a value for lambda, make a cumulative poission distribution function.
+makePoisson :: Double -> Double -> Int
+makePoisson lambda =
+    let fac n = product [1..n]
+        pmf k = (lambda ^ k) * (exp (negate lambda)) / (fromIntegral $ fac k)
+        maxK = floor $ 3 * lambda
+        probs = map pmf [0..maxK]
+        cumulativeProbs = scanl1 (+) probs
+    in  \x -> length $ takeWhile (< x) cumulativeProbs
