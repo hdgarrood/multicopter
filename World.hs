@@ -70,8 +70,7 @@ shiftSlices wl =
            , slices    = sls'
            , randomGen = gen'}
 
--- when sending Worlds back to the clients, they don't need to know about the
--- world definition, or the slice generator. They only need to know about the
--- slices.
+-- when sending Worlds back to the clients, they only need to know about the
+-- most recent slice
 instance ToJSON World where
-    toJSON (World slices _ _) = object ["slices" .= slices]
+    toJSON (World slices _ _) = object ["newSlice" .= head slices]

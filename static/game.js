@@ -1,7 +1,6 @@
-function drawWorld(world, canvas) {
+function drawWorld(slices, canvas) {
     var context = canvas.getContext('2d'),
         width = canvas.width,
-        slices = world.slices,
         sliceWidth = width / slices.length
 
     for (var i=0; i < slices.length; i++) {
@@ -30,14 +29,25 @@ function drawSlice(slice, context, width, position) {
     context.fillRect(xStart, currentY, xEnd, context.canvas.height)
 }
 
-function start() {
-    setInterval(iterate, 120)
+// Create an Array containing 'n' copies of 'value'.
+function replicate(n, value) {
+    return Array.apply(null, {length: n}).map(function() { return value })
 }
 
-function iterate() {
-    var canvas = document.getElementById('canvas')
+function start() {
+    var interval = 120,
+        worldLength = 20,
+        initialWorld = replicate(worldLength, [0])
+        requestStream = Bacon.interval(interval, { url: '/iterate' }),
+        lastN = function(array, n) {
+            return array.slice(array.length - n, array.length)
+        },
+        world = Bacon.combineAsArray(
+                    requestStream.ajax().map('.newSlice')
+                ).map(function(arr) { return lastN(arr, worldLength) }),
+        canvas = document.getElementById('canvas')
 
-    $.getJSON("/iterate").done(function(world) {
-        drawWorld(world, canvas)
-    })
+        world.onValue(function(world) {
+            drawWorld(world, canvas)
+        })
 }
