@@ -36,7 +36,7 @@ isSliceClear s a b =
 class SliceGen g where
     nextSlice :: g -> Rand StdGen (Slice, g)
 
--- Make these parameters of SliceGens?
+-- TODO: Make these parameters of SliceGens?
 -- The height of a slice.
 sliceHeight :: Int
 sliceHeight = 400
@@ -94,28 +94,33 @@ makeEdgeWidthGen =
 
 nextEdgeWidth :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
 nextEdgeWidth gen
-    | slices > 0  = continueSequence gen
-    | otherwise   = startNewSequence gen
+    | slices > 0  = continueEdgeSequence gen
+    | otherwise   = startNewEdgeSequence gen
     where
         slices = remainingSlicesInSequence gen
-        continueSequence gen =
-            let nextWidth = (currentWidth gen) + (currentGradient gen)
-                gen' = gen { currentWidth              = nextWidth
-                           , remainingSlicesInSequence = slices - 1
-                           }
-            in return $ (nextWidth, gen')
-        startNewSequence gen = do
-            param <- getRandomR (0, 1)
-            let newLength     = makePoisson meanSequenceLength $ param
-            let width         = currentWidth gen
-            let gradientRange = ( width - minEdgeWidth `div` newLength,
-                                  maxEdgeWidth - width `div` newLength )
 
-            newGradient <- getRandomR gradientRange
-            let gen' = gen { remainingSlicesInSequence = newLength
-                           , currentGradient           = newGradient
-                           }
-            continueSequence gen'
+continueEdgeSequence :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
+continueEdgeSequence gen =
+    let slices = remainingSlicesInSequence gen
+        nextWidth = (currentWidth gen) + (currentGradient gen)
+        gen' = gen { currentWidth              = nextWidth
+                   , remainingSlicesInSequence = slices - 1
+                   }
+    in return $ (nextWidth, gen')
+
+startNewEdgeSequence :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
+startNewEdgeSequence gen = do
+    param <- getRandomR (0, 1) :: Rand StdGen Double
+    let newLength     =  makePoisson meanSequenceLength $ param
+    let width         =  currentWidth gen
+    let gradientRange =  ((minEdgeWidth - width) `div` newLength,
+                          (maxEdgeWidth - width) `div` newLength)
+
+    newGradient       <- getRandomR gradientRange
+    let gen'          =  gen { remainingSlicesInSequence = newLength
+                             , currentGradient           = newGradient
+                             }
+    continueEdgeSequence gen'
 
 instance SliceGen StdSliceGen where
     nextSlice gen = do
@@ -134,9 +139,16 @@ instance SliceGen StdSliceGen where
 -- Given a value for lambda, make a cumulative poission distribution function.
 makePoisson :: Double -> Double -> Int
 makePoisson lambda =
+    let cumulativeProbs = makePoissonCumulativeProbs lambda
+    in  \x -> length $ takeWhile (< x) cumulativeProbs
+
+-- Take a mean, and return the cumulative probabilities of a Poisson
+-- distribution with that mean.
+makePoissonCumulativeProbs :: Double -> [Double]
+makePoissonCumulativeProbs lambda =
     let fac n = product [1..n]
         pmf k = (lambda ^ k) * (exp (negate lambda)) / (fromIntegral $ fac k)
         maxK = floor $ 3 * lambda
         probs = map pmf [0..maxK]
         cumulativeProbs = scanl1 (+) probs
-    in  \x -> length $ takeWhile (< x) cumulativeProbs
+    in  cumulativeProbs
