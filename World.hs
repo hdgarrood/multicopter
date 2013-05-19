@@ -5,7 +5,6 @@ import System.Random
 import Data.Aeson
 
 import Slice
-import SliceTest
 
 data Vect a = Vect { vectX :: a
                    , vectY :: a

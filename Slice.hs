@@ -1,6 +1,7 @@
 module Slice where
 
 import System.Random
+import Control.Monad.Random
 
 import Utils
 
@@ -32,115 +33,103 @@ isSliceClear s a b =
             | x < b     = False
             | otherwise = state
 
-class SliceGen a where
-    nextSlice :: a -> (a, Slice)
+class SliceGen g where
+    nextSlice :: g -> Rand StdGen (Slice, g)
 
--- a definition of a slice -- parameter to a SliceGen
-data SliceDef =
-    SliceDef
-        { edgeThicknessRange :: (Int, Int)
-        , maxDeviation :: Int
-        , slicesBetweenObstacles :: Int
-        , height :: Int
+-- Make these parameters of SliceGens?
+-- The height of a slice.
+sliceHeight :: Int
+sliceHeight = 400
+
+-- The mean length of a run of a wall or ceiling at a certain gradient, before
+-- another gradient will be chosen.
+meanSequenceLength :: Double
+meanSequenceLength = 15.0
+
+-- The minimum allowable width of a floor or roof obstacle.
+minEdgeWidth :: Int
+minEdgeWidth = 10
+
+-- The maximum allowable width of a floor or roof obstacle.
+maxEdgeWidth :: Int
+maxEdgeWidth = 50
+
+-- The number of slices at the start of a game which will have no central
+-- obstacles.
+gracePeriod :: Int
+gracePeriod = 20
+
+-- A StdSliceGen can be thought of as a machine which takes randomness and
+-- turns it into slices. Note than no randomness is stored within the
+-- StdSliceGen; it must be provided in order for it to produce slices.
+data StdSliceGen =
+    StdSliceGen
+        { roofWidthGen          :: EdgeWidthGen
+        , floorWidthGen         :: EdgeWidthGen
+        , slicesToNextObstacle  :: Int
         } deriving (Show, Read)
 
-data StdSliceGen =
-    StdSliceGen { prevRoofThickness :: Int
-                , prevFloorThickness :: Int
-                , slicesToNextObstacle :: Int
-                , randomGen :: StdGen
-                , sliceDef :: SliceDef
-                } deriving (Show, Read)
-
-mkStdSliceGen :: SliceDef -> IO StdSliceGen
-mkStdSliceGen def = do
-    gen <- getStdGen'
-    return StdSliceGen
-        { prevRoofThickness = 0
-        , prevFloorThickness = 0
-        , slicesToNextObstacle = 5
-        , randomGen = gen
-        , sliceDef = def
+makeStdSliceGen :: StdSliceGen
+makeStdSliceGen =
+    StdSliceGen
+        { roofWidthGen         = makeEdgeWidthGen
+        , floorWidthGen        = makeEdgeWidthGen
+        , slicesToNextObstacle = gracePeriod
         }
 
+data EdgeWidthGen =
+    EdgeWidthGen
+        { remainingSlicesInSequence :: Int
+        , currentGradient           :: Int
+        , currentWidth              :: Int
+        } deriving (Show, Read)
+
+makeEdgeWidthGen :: EdgeWidthGen
+makeEdgeWidthGen =
+    EdgeWidthGen
+        { remainingSlicesInSequence = 0
+        , currentGradient           = 0
+        , currentWidth              = (maxEdgeWidth + minEdgeWidth) `div` 2
+        }
+
+nextEdgeWidth :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
+nextEdgeWidth gen
+    | slices > 0  = continueSequence gen
+    | otherwise   = startNewSequence gen
+    where
+        slices = remainingSlicesInSequence gen
+        continueSequence gen =
+            let nextWidth = (currentWidth gen) + (currentGradient gen)
+                gen' = gen { currentWidth              = nextWidth
+                           , remainingSlicesInSequence = slices - 1
+                           }
+            in return $ (nextWidth, gen')
+        startNewSequence gen = do
+            param <- getRandomR (0, 1)
+            let newLength     = makePoisson meanSequenceLength $ param
+            let width         = currentWidth gen
+            let gradientRange = ( width - minEdgeWidth `div` newLength,
+                                  maxEdgeWidth - width `div` newLength )
+
+            newGradient <- getRandomR gradientRange
+            let gen' = gen { remainingSlicesInSequence = newLength
+                           , currentGradient           = newGradient
+                           }
+            continueSequence gen'
+
 instance SliceGen StdSliceGen where
-    nextSlice gen =
-        -- do it back-to-front so that we can build the list up backwards (for
-        -- efficiency)
-        makeRoof . makeObstacle . makeFloor $ (gen, [])
+    nextSlice gen = do
+        let roofGen             =  roofWidthGen gen
+        (roofWidth, roofGen')   <- nextEdgeWidth roofGen
 
--- Return a function which takes a double between 0 and 1 and returns a value
--- which is more likely to be near the previous value, and guaranteed to not be
--- below or above the min/max.
-makeDistribution ::
-    -- The previous value
-    Int ->
-    -- The max. and min. allowable values
-    (Int, Int) ->
-    -- A double between 0 and 1, which should be chosen uniformly and randomly.
-    Double ->
-    Int
-makeDistribution prevValue (minValue, maxValue) var =
-    let leftGradient = 1 / (fromIntegral $ prevValue - minValue)
-        rightGradient = 1 / (fromIntegral $ maxValue - prevValue)
-        difference = fromIntegral . abs . (prevValue -)
-        -- this is perhaps a bit of a misnomer; it doesn't necessarily return a
-        -- value x where 0 <= x <= 1
-        generateProbability x
-            | x < prevValue = 1 - (difference x * leftGradient)
-            | x > prevValue = 1 - (difference x * rightGradient)
-            | otherwise     = 1
-        probabilities = map generateProbability [minValue..maxValue]
-        scaleFactor = sum probabilities
-        scaledProbs = map (/ scaleFactor) probabilities
-        cumulatives = scanl1 (+) scaledProbs
-        selectedIndex = length $ takeWhile (<= var) cumulatives
-    in  selectedIndex - 1 + minValue
+        let floorGen            =  floorWidthGen gen
+        (floorWidth, floorGen') <- nextEdgeWidth floorGen
+        let floorWidth'         =  sliceHeight - floorWidth
 
-makeRoof :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
-makeRoof (sgen, slice) =
-    let rgen = randomGen sgen
-        th = prevRoofThickness sgen
-        def = sliceDef sgen
-        -- maxDev = maxDeviation def
-        rangeTh = edgeThicknessRange def
-        (val, rgen') = randomR (0, 1) rgen
-        th' = (makeDistribution th rangeTh) val
-        sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
-    in (sgen', th' : slice)
+        let gen'                =  gen { roofWidthGen = roofGen',
+                                         floorWidthGen = floorGen' }
 
-makeFloor :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
-makeFloor (sgen, slice) =
-    let rgen = randomGen sgen
-        th = prevFloorThickness sgen
-        def = sliceDef sgen
-        -- maxDev = maxDeviation def
-        rangeTh = edgeThicknessRange def
-        (val, rgen') = randomR (0, 1) rgen
-        th' = (makeDistribution th rangeTh) val
-        sgen' = sgen { randomGen = rgen', prevRoofThickness = th' }
-        floorDist = (height $ sliceDef sgen) - th'
-    in (sgen', floorDist : slice)
-
-makeObstacle :: (StdSliceGen, Slice) -> (StdSliceGen, Slice)
-makeObstacle (sgen, slice) =
-    let countSlices = slicesToNextObstacle sgen
-        def = sliceDef sgen
-        sliceHeight = height def
-        makeObstacle' (sgen, slice) =
-            let maxObstacleHeight = sliceHeight `div` 2
-                rgen = randomGen sgen
-                (obstacleHeight, rgen') = randomR (0, maxObstacleHeight) rgen
-                maxObstaclePos = sliceHeight - obstacleHeight
-                (obstaclePos, rgen'') = randomR (0, maxObstaclePos) rgen'
-                sgen' = sgen
-                    { randomGen = rgen''
-                    , slicesToNextObstacle = slicesBetweenObstacles def
-                    }
-            in (sgen', obstacleHeight : obstaclePos : slice)
-    in if countSlices == 0
-        then makeObstacle' (sgen, slice)
-        else (sgen { slicesToNextObstacle = countSlices - 1 }, slice)
+        return ([roofWidth, floorWidth'], gen')
 
 -- Given a value for lambda, make a cumulative poission distribution function.
 makePoisson :: Double -> Double -> Int

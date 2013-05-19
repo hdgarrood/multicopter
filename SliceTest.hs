@@ -9,15 +9,6 @@ sliceList :: (SliceGen a) => Int -> a -> [Slice]
 sliceList n =
     take n . unfoldr (Just . swap . nextSlice)
 
-getSliceGen :: IO StdSliceGen
-getSliceGen =
-    let def = SliceDef { edgeThicknessRange = (5, 25)
-                       , maxDeviation = 1
-                       , slicesBetweenObstacles = 5
-                       , height = 150
-                       }
-    in mkStdSliceGen def
-
 showSlice :: Slice -> String
 showSlice slice = "|" ++ sliceStr ++ "|"
     where
