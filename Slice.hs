@@ -54,6 +54,18 @@ minEdgeWidth = 10
 maxEdgeWidth :: Int
 maxEdgeWidth = 50
 
+-- The minimum allowable width of a centre-of-slice obstacle.
+minObstacleWidth :: Int
+minObstacleWidth = 20
+
+-- The maximum allowable width of a centre-of-slice obstacle.
+maxObstacleWidth :: Int
+maxObstacleWidth = 150
+
+-- The mean number of slices between obstacles.
+meanSlicesBetweenObstacles :: Double
+meanSlicesBetweenObstacles = 15.0
+
 -- The number of slices at the start of a game which will have no central
 -- obstacles.
 gracePeriod :: Int
@@ -68,17 +80,17 @@ emptySlice = [0]
 -- StdSliceGen; it must be provided in order for it to produce slices.
 data StdSliceGen =
     StdSliceGen
-        { roofWidthGen          :: EdgeWidthGen
-        , floorWidthGen         :: EdgeWidthGen
-        , slicesToNextObstacle  :: Int
+        { roofWidthGen  :: EdgeWidthGen
+        , floorWidthGen :: EdgeWidthGen
+        , obstacleGen   :: ObstacleGen
         } deriving (Show, Read)
 
 makeStdSliceGen :: StdSliceGen
 makeStdSliceGen =
     StdSliceGen
-        { roofWidthGen         = makeEdgeWidthGen
-        , floorWidthGen        = makeEdgeWidthGen
-        , slicesToNextObstacle = gracePeriod
+        { roofWidthGen  = makeEdgeWidthGen
+        , floorWidthGen = makeEdgeWidthGen
+        , obstacleGen   = makeObstacleGen
         }
 
 data EdgeWidthGen =
@@ -94,6 +106,17 @@ makeEdgeWidthGen =
         { remainingSlicesInSequence = 0
         , currentGradient           = 0
         , currentWidth              = (maxEdgeWidth + minEdgeWidth) `div` 2
+        }
+
+data ObstacleGen =
+    ObstacleGen
+        { slicesUntilNextObstacle :: Int
+        } deriving (Show, Read)
+
+makeObstacleGen :: ObstacleGen
+makeObstacleGen =
+    ObstacleGen
+        { slicesUntilNextObstacle = gracePeriod
         }
 
 nextEdgeWidth :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
@@ -114,7 +137,7 @@ continueEdgeSequence gen =
 
 startNewEdgeSequence :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
 startNewEdgeSequence gen = do
-    param <- getRandomR (0, 1) :: Rand StdGen Double
+    param             <- getRandomR (0, 1) :: Rand StdGen Double
     let newLength     =  makePoisson meanSequenceLength $ param
     let width         =  currentWidth gen
     let gradientRange =  ((minEdgeWidth - width) `div` newLength,
@@ -126,19 +149,71 @@ startNewEdgeSequence gen = do
                              }
     continueEdgeSequence gen'
 
+-- Given a slice, which should already have the top and bottom obstacles,
+-- return a new slice (and an updated ObstacleGen) which may have had an
+-- obstacle inserted.
+--
+-- Obstacles are added at a constant overall rate, but distributed randomly, by
+-- means of a Poisson distribution.
+addObstacle :: ObstacleGen -> Slice -> Rand StdGen (Slice, ObstacleGen)
+addObstacle oGen slice
+    | slices > 0 = continueObstacleSequence oGen slice
+    | otherwise  = startNewObstacleSequence oGen slice
+    where
+        slices = slicesUntilNextObstacle oGen
+
+continueObstacleSequence ::
+    ObstacleGen -> Slice -> Rand StdGen (Slice, ObstacleGen)
+continueObstacleSequence gen slice =
+    let slices = slicesUntilNextObstacle gen
+        gen'   = gen { slicesUntilNextObstacle = slices - 1 }
+    in  return $ (slice, gen')
+
+startNewObstacleSequence ::
+    ObstacleGen -> Slice -> Rand StdGen (Slice, ObstacleGen)
+startNewObstacleSequence gen slice = do
+    let cdf             =  makePoisson meanSlicesBetweenObstacles
+    param               <- getRandomR (0, 1) :: Rand StdGen Double
+    let slicesUntilNext =  cdf param
+
+    obstacleWidth       <- getRandomR (minObstacleWidth, maxObstacleWidth)
+
+    let roof            =  slice !! 0
+    let floor           =  slice !! 1
+    obstacleOffset      <- getRandomR (roof, floor - obstacleWidth)
+
+    let gen'            =  gen { slicesUntilNextObstacle = slicesUntilNext
+                               }
+    return $
+        ( [roof, obstacleOffset, obstacleOffset + obstacleWidth, floor]
+        , gen'
+        )
+
 instance SliceGen StdSliceGen where
     nextSlice gen = do
-        let roofGen             =  roofWidthGen gen
-        (roofWidth, roofGen')   <- nextEdgeWidth roofGen
-
+        -- Generate the floor
         let floorGen            =  floorWidthGen gen
         (floorWidth, floorGen') <- nextEdgeWidth floorGen
         let floorWidth'         =  sliceHeight - floorWidth
+        let slice               =  [floorWidth']
 
-        let gen'                =  gen { roofWidthGen = roofGen',
-                                         floorWidthGen = floorGen' }
+        -- Generate the roof
+        let roofGen             =  roofWidthGen gen
+        (roofWidth, roofGen')   <- nextEdgeWidth roofGen
+        let slice'              =  roofWidth : slice
 
-        return ([roofWidth, floorWidth'], gen')
+
+        -- Maybe generate an obstacle
+        let oGen                =  obstacleGen gen
+        (slice'', oGen')        <- addObstacle oGen slice'
+
+        -- Update the StdSliceGen
+        let gen'                =  gen { roofWidthGen  = roofGen'
+                                       , obstacleGen   = oGen'
+                                       , floorWidthGen = floorGen'
+                                       }
+
+        return (slice'', gen')
 
 -- Given a value for lambda, make a cumulative poission distribution function.
 makePoisson :: Double -> Double -> Int
