@@ -59,6 +59,10 @@ maxEdgeWidth = 50
 gracePeriod :: Int
 gracePeriod = 20
 
+-- we need a single 0 so that the whole slice is empty, rather than full.
+emptySlice :: Slice
+emptySlice = [0]
+
 -- A StdSliceGen can be thought of as a machine which takes randomness and
 -- turns it into slices. Note than no randomness is stored within the
 -- StdSliceGen; it must be provided in order for it to produce slices.

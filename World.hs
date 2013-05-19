@@ -2,6 +2,7 @@
 module World where
 
 import System.Random
+import Control.Monad.Random
 import Data.Aeson
 
 import Slice
@@ -37,39 +38,37 @@ withinRect v r =
     (vectY v) > (rectY r) &&
     (vectY v) < (rectY r + rectW r)
 
-data WorldDef =
-    WorldDef
-        { dimensions :: Vect Int
-        } deriving (Show, Read)
+-- how many slices can fit into a world at once
+worldWidth :: Int
+worldWidth = 30
 
 data World =
-    World { slices :: [Slice]
-          , sliceGen :: StdSliceGen
-          , worldDef :: WorldDef
+    World { slices    :: [Slice]
+          , sliceGen  :: StdSliceGen
+          , randomGen :: StdGen
           } deriving (Show, Read)
 
 makeWorld :: IO World
 makeWorld = do
-    let def = WorldDef { dimensions = Vect 20 150 }
-    gen <- getSliceGen
-    return World { slices = replicate 20 [0]
-                 , sliceGen = gen
-                 , worldDef = def
-                 }
+    gen <- getStdGen
+    return $ World
+        { slices    = replicate worldWidth emptySlice
+        , sliceGen  = makeStdSliceGen
+        , randomGen = gen
+        }
 
 iterateWorld :: World -> World
 iterateWorld = shiftSlices
 
 shiftSlices :: World -> World
 shiftSlices wl =
-    let (sgen', newSlice) = nextSlice (sliceGen wl)
-        sls = slices wl
-        sls' = sls ++ [newSlice]
-        maxSlices = vectX . dimensions . worldDef
-        sls''
-            | length sls == maxSlices wl = drop 1 sls'
-            | otherwise                  = sls'
-    in  wl { sliceGen = sgen', slices = sls'' }
+    let gen                           = randomGen wl
+        ((newSlice, sliceGen'), gen') = runRand (nextSlice $ sliceGen wl) gen
+        sls                           = slices wl
+        sls'                          = drop 1 sls ++ [newSlice]
+    in  wl { sliceGen  = sliceGen'
+           , slices    = sls'
+           , randomGen = gen'}
 
 -- when sending Worlds back to the clients, they don't need to know about the
 -- world definition, or the slice generator. They only need to know about the
