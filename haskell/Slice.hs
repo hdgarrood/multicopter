@@ -3,8 +3,6 @@ module Slice where
 import System.Random
 import Control.Monad.Random
 
-import Utils
-
 -- A slice of the visible world. Players will spend most of the time across
 -- two slices. Has a roof, a floor, and sometimes a third obstacle in the
 -- middle.
