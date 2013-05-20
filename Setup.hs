@@ -21,7 +21,7 @@ default (LT.Text)
 
 -- Ensure that the 'coffee' executable is present.
 checkForCoffee args flags = do
-    shellyNoDir $ errExit False $ do
+    shellyNoDir $ errExit False $ silently $ do
         run_ "which" ["coffee"]
         code <- lastExitCode
         if code == 1
