@@ -1,0 +1,11 @@
+name:           multicopter
+version:        0.0.1
+data-files:     static/*.js static/*.html
+cabal-version:  >= 1.2
+build-type:     Custom
+
+executable multicopter
+  hs-source-dirs:   haskell
+  main-is:          Main.hs
+  build-depends:    base, scotty, shelly, aeson
+

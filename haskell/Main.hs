@@ -1,11 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import System.Environment                   (getProgName)
-import System.Directory                     (setCurrentDirectory)
 import Control.Concurrent.MVar
 import Control.Monad.IO.Class
 
-import Filesystem.Path                      (directory)
 import Web.Scotty                           (scotty,
                                              middleware,
                                              get,
@@ -29,18 +26,17 @@ safeStatic =
         noDots
 
 main :: IO ()
-main = do
-    scotty 3000 $ do
-        middleware logStdoutDev
-        middleware safeStatic
+main = scotty 3000 $ do
+    middleware logStdoutDev
+    middleware safeStatic
 
-        world <- liftIO $ makeWorld >>= newMVar
+    world <- liftIO $ makeWorld >>= newMVar
 
-        get "/" $ do
-            redirect "/static/index.html"
+    get "/" $ do
+        redirect "/static/index.html"
 
-        get "/iterate" $ do
-            wl <- liftIO $ takeMVar world
-            let wl' = iterateWorld wl
-            liftIO $ putMVar world wl'
-            json wl'
+    get "/iterate" $ do
+        wl <- liftIO $ takeMVar world
+        let wl' = iterateWorld wl
+        liftIO $ putMVar world wl'
+        json wl'
