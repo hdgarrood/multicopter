@@ -36,18 +36,18 @@ function replicate(n, value) {
 
 function start() {
     var interval = 120,
-        worldLength = 20,
-        initialWorld = replicate(worldLength, [0])
+        worldWidth = 30,
+        initialWorld = replicate(worldWidth, [0])
         requestStream = Bacon.interval(interval, { url: '/iterate' }),
-        lastN = function(array, n) {
-            return array.slice(array.length - n, array.length)
-        },
-        world = Bacon.combineAsArray(
-                    requestStream.ajax().map('.newSlice')
-                ).map(function(arr) { return lastN(arr, worldLength) }),
+        world = requestStream.ajax().map('.newSlice')
+            .scan(initialWorld, function(slices, newSlice) {
+                slices.shift()
+                slices.push(newSlice)
+                return slices
+            }),
         canvas = document.getElementById('canvas')
 
-        world.onValue(function(world) {
-            drawWorld(world, canvas)
-        })
+    world.onValue(function(world) {
+        drawWorld(world, canvas)
+    })
 }
