@@ -18,18 +18,8 @@ default (LT.Text)
 --                 "-hidir",   "haskell/interfaces",
 --                 "-odir",    "haskell/objs"]
 
--- Compile all the CoffeeScript into JavaScript, and place it into static/, so
--- that Cabal picks it up as data files.
-buildCoffee :: ShIO ()
-buildCoffee =
-    run_ "coffee" ["--compile",
-                   "--output",  "static/",
-                   "coffee/*.coffee"]
 
--- buildStatic :: ShIO ()
--- buildStatic =
---     run_ "cp" ["-r", "static/", "site/"]
-
+-- Ensure that the 'coffee' executable is present.
 checkForCoffee args flags = do
     shellyNoDir $ errExit False $ do
         run_ "which" ["coffee"]
@@ -39,7 +29,17 @@ checkForCoffee args flags = do
             else return ()
     configure args flags
 
+-- Compile all the CoffeeScript into JavaScript, and place it into static/, so
+-- that Cabal picks it up as data files.
+-- buildCoffee pkg_descr localbuildinfo hooks flags = do
+    -- shellyNoDir $ do
+    --     run_ "coffee" ["--compile",
+    --                    "--output",  "static/",
+    --                    "coffee/*.coffee"]
+    -- defaultBuildHook pkg_descr localbuildinfo hooks flags
+
 main :: IO ()
 main = defaultMainWithHooks $
-    emptyUserHooks { confHook = checkForCoffee
-                   }
+    simpleUserHooks { confHook = checkForCoffee
+                    -- , preBuild = buildCoffee
+                    }
