@@ -1,7 +1,7 @@
 name:           multicopter
 version:        0.0.1
 data-files:     static/*.js static/*.html
-cabal-version:  >= 1.2
+cabal-version:  >= 1.6
 build-type:     Custom
 
 executable multicopter
