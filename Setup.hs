@@ -10,15 +10,6 @@ import Prelude                         hiding (FilePath)
 
 default (LT.Text)
 
--- buildHaskell :: ShIO ()
--- buildHaskell =
---     run_ "ghc" ["--make",   "haskell/Main.hs",
---                 "-o",       "site/multicopter",
---                 "-ihaskell",
---                 "-hidir",   "haskell/interfaces",
---                 "-odir",    "haskell/objs"]
-
-
 -- Ensure that the 'coffee' executable is present.
 checkForCoffee args flags = do
     shellyNoDir $ errExit False $ silently $ do
