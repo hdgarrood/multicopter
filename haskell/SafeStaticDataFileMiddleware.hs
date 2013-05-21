@@ -20,7 +20,6 @@ safeStaticDataFiles app req =
     let p = noDots
     in  maybe (app req)
               (\fp -> do datafp <- liftIO $ getDataFileName fp
-                         liftIO $ putStrLn datafp
                          exists <- liftIO $ doesFileExist datafp
                          if exists
                              then return $ ResponseFile status200

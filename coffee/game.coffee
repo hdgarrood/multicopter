@@ -33,8 +33,15 @@ start = ->
     interval = 120
     worldWidth = 30
     initialWorld = replicate(worldWidth, [0])
-    requestStream = Bacon.interval(interval, { url: '/iterate' })
-    world = requestStream.ajax().map('.newSlice')
+
+    webSocket = new WebSocket("ws://#{window.location.hostname}:9160/")
+    webSocket.onopen    = -> console.log "opened"
+    webSocket.onmessage = (data) -> console.log "got data: #{data}"
+    webSocket.onerror   = (msg) -> console.log "error happened: #{data}"
+    webSocket.onclose   = -> console.log "closed"
+
+    updateStream = Bacon.fromEventTarget(webSocket)
+    world = updateStream.map('.newSlice')
             .scan(initialWorld, (slices, newSlice) ->
                 slices.shift()
                 slices.push(newSlice)

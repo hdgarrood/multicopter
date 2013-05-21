@@ -60,7 +60,7 @@ startGameThread state = do
 startScottyThread :: MVar ServerState -> IO ()
 startScottyThread state =
     scotty 3000 $ do
-        middleware logStdoutDev
+        -- middleware logStdoutDev
         middleware safeStaticDataFiles
 
         get "/" $ do
