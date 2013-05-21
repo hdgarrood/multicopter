@@ -36,12 +36,13 @@ start = ->
 
     webSocket = new WebSocket("ws://#{window.location.hostname}:9160/")
     webSocket.onopen    = -> console.log "opened"
-    webSocket.onmessage = (data) -> console.log "got data: #{data}"
-    webSocket.onerror   = (msg) -> console.log "error happened: #{data}"
+    # webSocket.onmessage = (data) -> console.log "got data: #{data.data.toString()}"
+    webSocket.onerror   = (msg) -> console.log "error happened: #{msg.toString()}"
     webSocket.onclose   = -> console.log "closed"
 
-    updateStream = Bacon.fromEventTarget(webSocket)
-    world = updateStream.map('.newSlice')
+    updateStream = Bacon.fromEventTarget(webSocket, "message")
+    world = updateStream
+            .map((event) -> JSON.parse(event.data))
             .scan(initialWorld, (slices, newSlice) ->
                 slices.shift()
                 slices.push(newSlice)
