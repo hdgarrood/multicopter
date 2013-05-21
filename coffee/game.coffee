@@ -3,7 +3,7 @@ drawWorld = (slices, canvas) ->
     width = canvas.width
     sliceWidth = width / slices.length
 
-    [0..slices.length].forEach (i) ->
+    [0..slices.length - 1].forEach (i) ->
         drawSlice(slices[i],
                   context,
                   sliceWidth,
