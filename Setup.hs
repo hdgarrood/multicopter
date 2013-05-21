@@ -2,11 +2,11 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
-import Data.Text.Lazy                as LT
+import Data.Text.Lazy                  as LT
 import Shelly
 import Distribution.Simple
-import Distribution.Simple.Configure (configure)
-import Prelude                       hiding (FilePath)
+import Distribution.PackageDescription (emptyHookedBuildInfo)
+import Prelude                         hiding (FilePath)
 
 default (LT.Text)
 
@@ -27,19 +27,20 @@ checkForCoffee args flags = do
         if code == 1
             then fail "The CoffeeScript executable `coffee` is required."
             else return ()
-    configure args flags
+    return emptyHookedBuildInfo
 
 -- Compile all the CoffeeScript into JavaScript, and place it into static/, so
 -- that Cabal picks it up as data files.
--- buildCoffee pkg_descr localbuildinfo hooks flags = do
-    -- shellyNoDir $ do
-    --     run_ "coffee" ["--compile",
-    --                    "--output",  "static/",
-    --                    "coffee/*.coffee"]
-    -- defaultBuildHook pkg_descr localbuildinfo hooks flags
+buildCoffee args flags = do
+    putStrLn "Compiling CoffeeScript..."
+    shellyNoDir $ escaping False $ do
+        run_ "coffee" ["--compile",
+                       "--output",  "static/from-coffee",
+                       "coffee/*.coffee"]
+    return emptyHookedBuildInfo
 
 main :: IO ()
 main = defaultMainWithHooks $
-    simpleUserHooks { confHook = checkForCoffee
-                    -- , preBuild = buildCoffee
+    simpleUserHooks { preConf  = checkForCoffee
+                    , preBuild = buildCoffee
                     }
