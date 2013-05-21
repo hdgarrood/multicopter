@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Control.Concurrent                   (forkIO, threadDelay)
 import Control.Concurrent.MVar
-import Control.Monad.IO.Class
+import Control.Monad                        (forever, void)
+import Control.Monad.IO.Class               (liftIO)
 
 import Web.Scotty                           (scotty,
                                              middleware,
@@ -14,44 +16,60 @@ import Data.Aeson                           (encode)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as B
 import qualified Network.WebSockets as WS
+import qualified Network.WebSockets.Util.PubSub as WS
 
 import World
 import SafeStaticDataFileMiddleware         (safeStaticDataFiles)
 
--- for now, a client is just a sink
-type Client = WS.Sink WS.Rfc6455
-type ServerState = (World, [Client])
+-- A server state is
+type ServerState = (World, WS.PubSub WS.Hybi10)
 
-newServerState :: ServerState
-newServerState = (makeWorld, [])
-
-broadcast :: ByteString -> ServerState -> IO ()
-broadcast message clients = do
-    T.putStrLn $ "broadcasting: " ++ message
-    mapM_ (\s -> WS.sendSink s $ WS.binaryData message) clients
+newServerState :: IO ServerState
+newServerState = do
+    world  <- makeWorld
+    pubSub <- WS.newPubSub
+    return (world, pubSub)
 
 webSocketServerPort :: Int
 webSocketServerPort = 9160
 
 startWebSocketsThread :: MVar ServerState -> IO ()
-startWebSocketsThread state = do
-    WS.runServer "0.0.0.0" webSocketServerPort $ application state
+startWebSocketsThread state =
+    WS.runServer "0.0.0.0" webSocketServerPort $
+        (\rq -> do
+            WS.acceptRequest rq
+            liftIO $ putStrLn "New connection"
+            pubSub <- liftIO $ fmap snd $ readMVar state
+            WS.subscribe pubSub)
 
-application :: MVar ServerState -> WS.Request -> WS.WebSockets WS.Rfc6455 ()
-application state rq = do
-    WS.acceptRequest rq
-    T.putStrLn "New connection"
+millisecondsPerStep :: Int
+millisecondsPerStep = 120
+
+startGameThread :: MVar ServerState -> IO ()
+startGameThread state = do
     forever $ do
+        (world, pubSub) <- takeMVar state
+        let world'      =  iterateWorld world
+        putMVar state (world', pubSub)
 
-main :: IO ()
-main = do
-    state <- newMVar newServerState
+        threadDelay millisecondsPerStep
 
-    forkIO $ startWebSocketsThread state
+        let message     = encode world'
+        WS.publish pubSub $ WS.binaryData message
 
+startScottyThread :: MVar ServerState -> IO ()
+startScottyThread state =
     scotty 3000 $ do
         middleware logStdoutDev
         middleware safeStaticDataFiles
 
         get "/" $ do
             redirect "/static/index.html"
+main :: IO ()
+main = do
+    state  <- newServerState
+    mstate <- newMVar state
+
+    void $ forkIO $ startGameThread       mstate
+    void $ forkIO $ startWebSocketsThread mstate
+    startScottyThread     mstate
