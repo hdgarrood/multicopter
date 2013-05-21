@@ -9,8 +9,13 @@ executable multicopter
   main-is:          Main.hs
   build-depends:    base,
                     random,
+                    bytestring,
+                    containers,
                     MonadRandom,
                     transformers,
+                    text,
+                    directory,
+                    http-types,
                     scotty,
                     shelly,
                     aeson,

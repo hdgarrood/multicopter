@@ -9,26 +9,16 @@ import Web.Scotty                           (scotty,
                                              redirect,
                                              json)
 import Network.Wai                          (Middleware)
-import Network.Wai.Middleware.Static        (staticPolicy,
-                                             hasPrefix,
-                                             noDots,
-                                             (>->))
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Data.Aeson                           (encode)
 
 import World
-
--- Ensures that people can only get files within ./static
-safeStatic :: Middleware
-safeStatic =
-    staticPolicy $
-        hasPrefix "static/" >->
-        noDots
+import SafeStaticDataFileMiddleware         (safeStaticDataFiles)
 
 main :: IO ()
 main = scotty 3000 $ do
     middleware logStdoutDev
-    middleware safeStatic
+    middleware safeStaticDataFiles
 
     world <- liftIO $ makeWorld >>= newMVar
 
