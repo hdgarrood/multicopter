@@ -46,19 +46,19 @@ meanSequenceLength = 15.0
 
 -- The minimum allowable width of a floor or roof obstacle.
 minEdgeWidth :: Int
-minEdgeWidth = 10
+minEdgeWidth = 20
 
 -- The maximum allowable width of a floor or roof obstacle.
 maxEdgeWidth :: Int
-maxEdgeWidth = 50
+maxEdgeWidth = 70
 
 -- The minimum allowable width of a centre-of-slice obstacle.
 minObstacleWidth :: Int
-minObstacleWidth = 20
+minObstacleWidth = 50
 
 -- The maximum allowable width of a centre-of-slice obstacle.
 maxObstacleWidth :: Int
-maxObstacleWidth = 150
+maxObstacleWidth = 180
 
 -- The mean number of slices between obstacles.
 meanSlicesBetweenObstacles :: Double
