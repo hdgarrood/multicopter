@@ -3,7 +3,7 @@ drawWorld = (world, canvas) ->
     width      = canvas.width
     slices     = world.slices
     offset     = world.offset
-    sliceWidth = width / slices.length
+    sliceWidth = 30
 
     [0..slices.length - 1].forEach (i) ->
         drawSlice(slices[i],
@@ -13,7 +13,7 @@ drawWorld = (world, canvas) ->
 
 drawSlice = (slice, context, width, position) ->
     isInsideObstacle = true
-    xStart = position.x
+    xStart = _.max([0, position.x])
     xEnd = xStart + width - 1
     currentY = position.y
 
@@ -52,10 +52,9 @@ class WorldChanges
 
 
 start = ->
-    interval = 120
-    worldWidth = 30
+    maxSlicesInWorld = 28
     initialWorld =
-        slices: replicate(worldWidth, [0])
+        slices: replicate(maxSlicesInWorld, [0])
         offset: 0
 
     webSocket = new WebSocket("ws://#{window.location.hostname}:9160/")

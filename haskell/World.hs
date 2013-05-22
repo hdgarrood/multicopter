@@ -83,8 +83,8 @@ type WorldChanges = [WorldChange]
 iterateWorld :: World -> Writer WorldChanges World
 iterateWorld world =
     return world 
-        >>= updateOffset
         >>= updateSlices
+        >>= updateOffset
 
 updateSlices :: World -> Writer WorldChanges World
 updateSlices world =
