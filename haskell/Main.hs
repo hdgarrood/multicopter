@@ -42,8 +42,8 @@ startWebSocketsThread state =
             pubSub <- liftIO $ fmap snd $ readMVar state
             WS.subscribe pubSub)
 
-millisecondsPerStep :: Int
-millisecondsPerStep = 120
+microsecondsPerStep :: Int
+microsecondsPerStep = 250 * 1000
 
 startGameThread :: MVar ServerState -> IO ()
 startGameThread state = do
@@ -52,9 +52,10 @@ startGameThread state = do
         let world'      =  iterateWorld world
         putMVar state (world', pubSub)
 
-        threadDelay millisecondsPerStep
+        threadDelay microsecondsPerStep
 
         let message     = encode world'
+        B.putStrLn $ "sending " `B.append` message
         WS.publish pubSub $ WS.binaryData message
 
 startScottyThread :: MVar ServerState -> IO ()

@@ -29,6 +29,14 @@ drawSlice = (slice, context, width, position) ->
 replicate = (n, value) ->
     Array.apply(null, {length: n}).map(-> value)
 
+Bacon.fromWebSocket = (webSocket) ->
+    Bacon.fromEventTarget(webSocket, "message")
+        .flatMap (event) ->
+            reader = new FileReader()
+            reader.readAsText(event.data)
+            Bacon.fromEventTarget(reader, "load")
+        .map((event) -> event.target.result)
+
 start = ->
     interval = 120
     worldWidth = 30
@@ -40,9 +48,9 @@ start = ->
     webSocket.onerror   = (msg) -> console.log "error happened: #{msg.toString()}"
     webSocket.onclose   = -> console.log "closed"
 
-    updateStream = Bacon.fromEventTarget(webSocket, "message")
-    world = updateStream
-            .map((event) -> JSON.parse(event.data))
+    world = Bacon.fromWebSocket(webSocket)
+            .map((data) -> JSON.parse(data))
+            .map('.newSlice')
             .scan(initialWorld, (slices, newSlice) ->
                 slices.shift()
                 slices.push(newSlice)
