@@ -15,6 +15,7 @@ import Network.Wai                          (Middleware)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Data.Aeson                           (encode)
 import qualified Data.Text as T
+import Data.Text.Lazy.Encoding              (decodeASCII)
 import qualified Data.ByteString.Lazy as B
 import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Util.PubSub as WS
@@ -60,7 +61,7 @@ startGameThread state = do
 
         let message     = encode changes
         B.putStrLn $ "sending " `B.append` message
-        WS.publish pubSub $ WS.binaryData message
+        WS.publish pubSub $ WS.textData $ decodeASCII message
 
 startScottyThread :: MVar ServerState -> IO ()
 startScottyThread state =

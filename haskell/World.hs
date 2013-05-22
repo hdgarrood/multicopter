@@ -33,7 +33,7 @@ worldWidth :: Int
 worldWidth = (maxSlicesInWorld - 1) * sliceWidth
 
 startingVelocity :: Double
-startingVelocity = 1.0
+startingVelocity = 3.0
 
 data World =
     World { slices           :: [Slice]
