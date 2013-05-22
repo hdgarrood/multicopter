@@ -46,7 +46,7 @@ startWebSocketsThread state =
             WS.subscribe pubSub)
 
 stepsPerSecond :: Int
-stepsPerSecond = 30
+stepsPerSecond = 60
 
 microsecondsPerStep :: Int
 microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
