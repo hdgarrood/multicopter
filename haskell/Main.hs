@@ -4,6 +4,7 @@ import Control.Concurrent                   (forkIO, threadDelay)
 import Control.Concurrent.MVar
 import Control.Monad                        (forever, void)
 import Control.Monad.IO.Class               (liftIO)
+import Control.Monad.Writer                 (runWriter)
 
 import Web.Scotty                           (scotty,
                                              middleware,
@@ -51,13 +52,13 @@ microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
 startGameThread :: MVar ServerState -> IO ()
 startGameThread state = do
     forever $ do
-        (world, pubSub) <- takeMVar state
-        let world'      =  iterateWorld world
+        (world, pubSub)       <- takeMVar state
+        let (world', changes) =  runWriter $ iterateWorld world
         putMVar state (world', pubSub)
 
         threadDelay microsecondsPerStep
 
-        let message     = encode world'
+        let message     = encode changes
         B.putStrLn $ "sending " `B.append` message
         WS.publish pubSub $ WS.binaryData message
 

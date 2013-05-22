@@ -3,32 +3,13 @@ module World where
 
 import System.Random
 import Control.Monad.Random
+import Control.Monad.Writer
+
+import qualified Data.Text as T
 import Data.Aeson
 
 import Slice
-
-data Vect a = Vect { vectX :: a
-                   , vectY :: a
-                   } deriving (Show, Read)
-
-data Rect a = Rect { rectX :: a
-                   , rectY :: a
-                   , rectW :: a
-                   , rectH :: a
-                   } deriving (Show, Read)
-
--- Do two rectangles overlap?
-collisionBetween :: (Num a, Ord a) => Rect a -> Rect a -> Bool
-collisionBetween a b =
-    let ax1 = rectX a
-        ax2 = rectX a + rectW a
-        ay1 = rectY a
-        ay2 = rectY a + rectH a
-        bx1 = rectX b
-        bx2 = rectX b + rectW b
-        by1 = rectY b
-        by2 = rectY b + rectH b
-    in  (ax1 < bx2) && (ax2 > bx1) && (ay1 < by2) && (ay2 > by1)
+import Geometry
 
 -- Is a Vect within a Rect?
 withinRect :: (Num a, Ord a) => Vect a -> Rect a -> Bool
@@ -39,38 +20,102 @@ withinRect v r =
     (vectY v) < (rectY r + rectW r)
 
 -- how many slices can fit into a world at once
+maxSlicesInWorld :: Int
+maxSlicesInWorld = 28
+
+-- how wide is a slice
+sliceWidth :: Int
+sliceWidth = 30
+
+-- how wide is the whole world
+-- Subtract one because two slices will always be only partially visible
 worldWidth :: Int
-worldWidth = 30
+worldWidth = (maxSlicesInWorld - 1) * sliceWidth
+
+startingVelocity :: Double
+startingVelocity = 1.0
 
 data World =
-    World { slices    :: [Slice]
-          , sliceGen  :: StdSliceGen
-          , randomGen :: StdGen
+    World { slices           :: [Slice]
+          , sliceGen         :: StdSliceGen
+          -- how far along the world has moved since the last slice was added
+          , offset           :: Double 
+          -- how far the slices move per step. This will slowly increase over
+          -- time.
+          , velocity         :: Double 
+          , randomGen        :: StdGen
           } deriving (Show, Read)
 
 makeWorld :: IO World
 makeWorld = do
     gen <- getStdGen
     return $ World
-        { slices    = replicate worldWidth emptySlice
-        , sliceGen  = makeStdSliceGen
-        , randomGen = gen
+        { slices           = replicate maxSlicesInWorld emptySlice
+        , sliceGen         = makeStdSliceGen
+        , offset           = 0
+        , velocity         = startingVelocity
+        , randomGen        = gen
         }
 
-iterateWorld :: World -> World
-iterateWorld = shiftSlices
+-- Any piece of information which we send back to clients regarding a change of
+-- state in the world is packaged up as a WorldChange.
+data WorldChange = SliceAdded Slice -- A slice was added
+                 | SlicesMoved Double -- Tells how far the slices moved
+                 | PlayerMoved (Vect Double) -- Gives new player positions
+                   deriving (Show)
 
-shiftSlices :: World -> World
-shiftSlices wl =
-    let gen                           = randomGen wl
-        ((newSlice, sliceGen'), gen') = runRand (nextSlice $ sliceGen wl) gen
-        sls                           = slices wl
-        sls'                          = drop 1 sls ++ [newSlice]
-    in  wl { sliceGen  = sliceGen'
-           , slices    = sls'
-           , randomGen = gen'}
+instance ToJSON WorldChange where
+    toJSON (SliceAdded slice) = 
+        object [ "type" .= ("sliceAdded"  :: T.Text)
+               , "data" .= slice
+               ]
+    toJSON (SlicesMoved dist) =
+        object [ "type" .= ("slicesMoved" :: T.Text)
+               , "data" .= dist
+               ]
+    toJSON (PlayerMoved vec) =
+        object [ "type" .= ("playerMoved" :: T.Text)
+               , "data" .= vec
+               ]
 
--- when sending Worlds back to the clients, they only need to know about the
--- most recent slice
-instance ToJSON World where
-    toJSON (World slices _ _) = object ["newSlice" .= head slices]
+type WorldChanges = [WorldChange]
+
+iterateWorld :: World -> Writer WorldChanges World
+iterateWorld world =
+    return world 
+        >>= updateSlices
+        >>= updateOffset
+
+updateSlices :: World -> Writer WorldChanges World
+updateSlices world =
+    if needsNewSlice world
+        then shiftSlices world
+        else return world
+
+needsNewSlice :: World -> Bool
+needsNewSlice (World _ _ offset _ _ ) =
+    floor offset >= sliceWidth
+
+shiftSlices :: World -> Writer WorldChanges World
+shiftSlices world = do
+    let gen     = randomGen world
+    let ((newSlice, sliceGen'), gen') = runRand
+                                            (nextSlice $ sliceGen world) gen
+    let sls     = slices world
+    let sls'    = drop 1 sls ++ [newSlice]
+    let offset' = offset world - (fromIntegral sliceWidth)
+
+    tell $ [SliceAdded newSlice]
+    return world { sliceGen  = sliceGen'
+                 , slices    = sls'
+                 , randomGen = gen'
+                 , offset    = offset'
+                 }
+
+updateOffset :: World -> Writer WorldChanges World
+updateOffset world = do
+    let vel     = velocity world
+    let offset' = offset world + vel
+
+    tell $ [SlicesMoved offset']
+    return world { offset = offset' }
