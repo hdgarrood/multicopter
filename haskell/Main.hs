@@ -42,8 +42,11 @@ startWebSocketsThread state =
             pubSub <- liftIO $ fmap snd $ readMVar state
             WS.subscribe pubSub)
 
+stepsPerSecond :: Int
+stepsPerSecond = 30
+
 microsecondsPerStep :: Int
-microsecondsPerStep = 250 * 1000
+microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
 
 startGameThread :: MVar ServerState -> IO ()
 startGameThread state = do
