@@ -35,6 +35,10 @@ worldWidth = (maxSlicesInWorld - 1) * sliceWidth
 startingVelocity :: Double
 startingVelocity = 5
 
+-- The amount the world speeds up per step
+worldAcceleration :: Double
+worldAcceleration = 0.001
+
 data World =
     World { slices           :: [Slice]
           , sliceGen         :: StdSliceGen
@@ -60,8 +64,8 @@ makeWorld = do
 -- Any piece of information which we send back to clients regarding a change of
 -- state in the world is packaged up as a WorldChange.
 data WorldChange = SliceAdded Slice -- A slice was added
-                 | SlicesMoved Double -- Tells how far the slices moved
-                 | PlayerMoved (Vect Double) -- Gives new player positions
+                 | SlicesMoved Int -- Tells how far the slices moved
+                 | PlayerMoved (Vect Int) -- Gives new player positions
                    deriving (Show)
 
 instance ToJSON WorldChange where
@@ -115,7 +119,10 @@ shiftSlices world = do
 updateOffset :: World -> Writer WorldChanges World
 updateOffset world = do
     let vel     = velocity world
-    let offset' = offset world + vel
+    let vel'    = vel + worldAcceleration
+    let offset' = offset world + vel'
 
-    tell $ [SlicesMoved offset']
-    return world { offset = offset' }
+    tell $ [SlicesMoved $ round offset']
+    return world { offset = offset'
+                 , velocity = vel'
+                 }
