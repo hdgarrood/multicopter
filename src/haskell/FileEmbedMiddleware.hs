@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module FileEmbedMiddleware (fileEmbed) where
+module FileEmbedMiddleware where
 
 import qualified Data.ByteString as B
 import qualified Data.Text as T
@@ -47,7 +47,7 @@ getEmbedPath pathInfo =
 getMime :: FilePath -> B.ByteString
 getMime fp =
     let (_, ext) = splitExtension fp
-    in  M.findWithDefault defaultMimeType fp mimeMap
+    in  M.findWithDefault defaultMimeType ext mimeMap
 
 defaultMimeType :: B.ByteString
 defaultMimeType = "application/octet-stream"
@@ -57,5 +57,5 @@ mimeMap :: M.Map String B.ByteString
 mimeMap = M.fromList $
     [ (".html", "text/html")
     , (".js", "text/javascript")
-    , (".css,", "text/css")
+    , (".css", "text/css")
     ]
