@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 
 import Control.Concurrent                   (forkIO, threadDelay)
 import Control.Concurrent.MVar
@@ -20,6 +20,7 @@ import qualified Data.ByteString.Lazy as B hiding (putStrLn)
 import qualified Data.ByteString.Lazy.Char8 as B (putStrLn)
 import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Util.PubSub as WS
+import Data.FileEmbed                       (embedDir)
 
 import World
 import FileEmbedMiddleware                  (fileEmbed)
@@ -69,7 +70,7 @@ startScottyThread state =
     scotty 3000 $ do
         -- middleware logStdoutDev
         -- middleware safeStaticDataFiles
-        middleware $ fileEmbed [("lol.txt", "lol")]
+        middleware $ fileEmbed $(embedDir "src/static")
 
         get "/" $ do
             redirect "/static/index.html"
