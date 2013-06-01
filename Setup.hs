@@ -21,17 +21,17 @@ checkForCoffee args flags = do
     return emptyHookedBuildInfo
 
 -- Compile all the CoffeeScript into JavaScript, and place it into static/, so
--- that Cabal picks it up as data files.
+-- that they can be compiled into the executable
 buildCoffee args flags = do
     putStrLn "Compiling CoffeeScript..."
     shellyNoDir $ escaping False $ do
         run_ "coffee" ["--compile",
-                       "--output",  "static/from-coffee",
-                       "coffee/*.coffee"]
+                       "--output",  "src/static/from-coffee",
+                       "src/coffee/*.coffee"]
     return emptyHookedBuildInfo
 
 main :: IO ()
-main = defaultMain
-    -- simpleUserHooks { preConf  = checkForCoffee
-    --                 , preBuild = buildCoffee
-    --                 }
+main = defaultMainWithHooks $
+    simpleUserHooks { preConf  = checkForCoffee
+                    , preBuild = buildCoffee
+                    }

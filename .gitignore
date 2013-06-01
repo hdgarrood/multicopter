@@ -2,4 +2,4 @@
 *.o
 cabal-dev/*
 dist/*
-static/from-coffee/*
+src/static/from-coffee/*
