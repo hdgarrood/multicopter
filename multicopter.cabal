@@ -1,11 +1,10 @@
 name:           multicopter
 version:        0.0.1
-data-files:     static/deps/*.js static/from-coffee/*.js static/*.html
 cabal-version:  >= 1.6
 build-type:     Custom
 
 executable multicopter
-  hs-source-dirs:   haskell
+  hs-source-dirs:   src/haskell
   main-is:          Main.hs
   ghc-options:      -threaded
   build-depends:    base,
@@ -16,6 +15,9 @@ executable multicopter
                     mtl,
                     transformers,
                     text,
+                    filepath,
+                    conduit,
+                    blaze-builder,
                     directory,
                     http-types,
                     scotty,
@@ -24,4 +26,5 @@ executable multicopter
                     wai,
                     wai-extra,
                     wai-middleware-static,
-                    websockets
+                    websockets,
+                    file-embed

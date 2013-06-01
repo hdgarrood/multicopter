@@ -31,7 +31,7 @@ buildCoffee args flags = do
     return emptyHookedBuildInfo
 
 main :: IO ()
-main = defaultMainWithHooks $
-    simpleUserHooks { preConf  = checkForCoffee
-                    , preBuild = buildCoffee
-                    }
+main = defaultMain
+    -- simpleUserHooks { preConf  = checkForCoffee
+    --                 , preBuild = buildCoffee
+    --                 }

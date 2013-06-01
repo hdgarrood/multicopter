@@ -22,7 +22,7 @@ import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Util.PubSub as WS
 
 import World
-import SafeStaticDataFileMiddleware         (safeStaticDataFiles)
+import FileEmbedMiddleware                  (fileEmbed)
 
 -- A server state is
 type ServerState = (World, WS.PubSub WS.Hybi10)
@@ -68,7 +68,8 @@ startScottyThread :: MVar ServerState -> IO ()
 startScottyThread state =
     scotty 3000 $ do
         -- middleware logStdoutDev
-        middleware safeStaticDataFiles
+        -- middleware safeStaticDataFiles
+        middleware $ fileEmbed [("lol.txt", "lol")]
 
         get "/" $ do
             redirect "/static/index.html"
