@@ -74,6 +74,7 @@ startScottyThread state =
 
         get "/" $ do
             redirect "/static/index.html"
+
 main :: IO ()
 main = do
     state  <- newServerState
