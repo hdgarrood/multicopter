@@ -1,7 +1,7 @@
 name:           multicopter
 version:        0.0.1
 cabal-version:  >= 1.6
-build-type:     Custom
+build-type:     Simple
 
 executable multicopter
   hs-source-dirs:   src/haskell
@@ -27,4 +27,5 @@ executable multicopter
                     wai-extra,
                     wai-middleware-static,
                     websockets,
-                    file-embed
+                    file-embed,
+                    ixset
