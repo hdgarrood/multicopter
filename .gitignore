@@ -3,3 +3,5 @@
 cabal-dev/*
 dist/*
 src/static/from-coffee/*
+.cabal-sandbox
+cabal.sandbox.config
