@@ -1,13 +1,12 @@
 module Player where
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings,
-GeneralizedNewTypeDeriving #-}
-
 import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
-import Data.IxSet
-import Data.Data                 (Data, Typeable)
-import System.Random
+import           Data.IxSet
+import           Data.Data (Data, Typeable)
+import           System.Random
+
+import           TokenGenerator
 
 newtype PlayerId = PlayerId Int     deriving (Eq, Show, Ord, Data, Typeable, Enum)
 newtype Name     = Name ByteString  deriving (Eq, Show, Ord, Data, Typeable)
@@ -21,10 +20,10 @@ data Player = Player
     deriving (Data, Typeable, Show, Eq, Ord)
 
 data PlayerRepository = PlayerRepository
-    { nextPlayerId :: PlayerId
-    , players      :: IxSet Player
+    { nextPlayerId   :: PlayerId
+    , tokenGenerator :: TokenGenerator
+    , players        :: IxSet Player
     }
-    deriving (Data, Typeable)
 
 instance Indexable Player where
     empty = ixSet
@@ -32,11 +31,13 @@ instance Indexable Player where
                 , ixFun $ \p -> [ Token $ token p ]
                 ]
 
-initialPlayerRepository :: PlayerRepository
-initialPlayerRepository =
-    PlayerRepository
-        { nextPlayerId = PlayerId 1
-        , players      = empty
+makePlayerRepository :: IO PlayerRepository
+makePlayerRepository = do
+    tokGen <- getTokenGenerator
+    return $ PlayerRepository
+        { nextPlayerId   = PlayerId 1
+        , tokenGenerator = tokGen
+        , players        = empty
         }
 
 -- Add a player to the repository. Returns the newly added player and the
@@ -44,14 +45,17 @@ initialPlayerRepository =
 addPlayer :: PlayerRepository -> ByteString -> (Player, PlayerRepository)
 addPlayer repo playerName =
     let thisId = nextPlayerId repo
+        tokGen = tokenGenerator repo
+        (tok, tokGen') = nextToken tokGen
         player = Player
                     { playerId = thisId
                     , name     = playerName
-                    , token    = "" -- TODO: generate these
+                    , token    = tok
                     }
         repo' = repo
-                    { nextPlayerId = succ thisId
-                    , players      = insert player $ players repo
+                    { nextPlayerId   = succ thisId
+                    , tokenGenerator = tokGen'
+                    , players        = insert player $ players repo
                     }
     in (player, repo')
 

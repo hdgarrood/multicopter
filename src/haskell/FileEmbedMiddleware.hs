@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module FileEmbedMiddleware where
 
 import qualified Data.ByteString as B

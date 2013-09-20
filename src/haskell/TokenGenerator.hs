@@ -6,19 +6,24 @@ import           Control.Monad.Random
 import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Char8 (singleton)
+import           Data.Data (Data, Typeable)
 
-data TokenGenerator = TokenGenerator
-    { randomGen :: StdGen
-    }
+newtype TokenGenerator = TokenGenerator StdGen deriving (Show)
 
 -- arbitrarily chosen
 tokenLength :: Int
 tokenLength = 50
 
+mkTokenGenerator :: Int -> TokenGenerator
+mkTokenGenerator n = TokenGenerator (mkStdGen n)
+
+getTokenGenerator :: IO TokenGenerator
+getTokenGenerator = fmap TokenGenerator getStdGen
+
 nextToken :: TokenGenerator -> (ByteString, TokenGenerator)
-nextToken tokGen =
-    let (token, randomGen') = runRand generateToken $ randomGen tokGen
-    in  (token, tokGen { randomGen = randomGen' })
+nextToken (TokenGenerator gen) =
+    let (token, gen') = runRand generateToken gen
+    in  (token, TokenGenerator gen')
 
 generateToken :: Rand StdGen ByteString
 generateToken = do

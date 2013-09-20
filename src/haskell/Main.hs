@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
-
 import Control.Concurrent                   (forkIO, threadDelay)
 import Control.Concurrent.MVar
 import Control.Monad                        (forever, void)

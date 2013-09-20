@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module World where
 
 import System.Random

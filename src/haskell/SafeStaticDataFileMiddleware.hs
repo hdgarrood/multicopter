@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module SafeStaticDataFileMiddleware (safeStaticDataFiles) where
 
 import System.Directory

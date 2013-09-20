@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Geometry where
 
 import Data.Aeson

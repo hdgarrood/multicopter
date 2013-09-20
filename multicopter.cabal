@@ -29,3 +29,7 @@ executable multicopter
                     websockets,
                     file-embed,
                     ixset
+  extensions:       GeneralizedNewtypeDeriving,
+                    OverloadedStrings,
+                    DeriveDataTypeable,
+                    TemplateHaskell
