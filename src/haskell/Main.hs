@@ -62,7 +62,7 @@ startScottyThread tvar = do
     scottyT 3000 runM runActionToIO $ do
         -- middleware logStdoutDev
         -- middleware safeStaticDataFiles
-        middleware $ fileEmbed $(embedDir "src/static")
+        -- middleware $ fileEmbed $(embedDir "src/static")
 
         get "/" $ do
             redirect "/register"
