@@ -1,14 +1,11 @@
-import Control.Concurrent                   (forkIO, threadDelay)
-import Control.Concurrent.MVar
+import Control.Concurrent.STM
 import Control.Monad                        (forever, void)
 import Control.Monad.IO.Class               (liftIO)
 import Control.Monad.Writer                 (runWriter)
+import Control.Monad.Reader
 
-import Web.Scotty                           (scotty,
-                                             middleware,
-                                             get,
-                                             redirect,
-                                             json)
+import Web.Scotty.Trans
+
 import Network.Wai                          (Middleware)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Data.Aeson                           (encode)
@@ -22,62 +19,65 @@ import Data.FileEmbed                       (embedDir)
 
 import World
 import FileEmbedMiddleware                  (fileEmbed)
+import Views
+import ServerState
+import WebM
 
--- A server state is
-type ServerState = (World, WS.PubSub WS.Hybi10)
+-- webSocketServerPort :: Int
+-- webSocketServerPort = 9160
 
-newServerState :: IO ServerState
-newServerState = do
-    world  <- makeWorld
-    pubSub <- WS.newPubSub
-    return (world, pubSub)
+-- startWebSocketsThread :: MVar ServerState -> IO ()
+-- startWebSocketsThread state =
+--     WS.runServer "0.0.0.0" webSocketServerPort $
+--         (\rq -> do
+--             WS.acceptRequest rq
+--             liftIO $ putStrLn "New connection"
+--             pubSub <- liftIO $ fmap snd $ readMVar state
+--             WS.subscribe pubSub)
 
-webSocketServerPort :: Int
-webSocketServerPort = 9160
+-- stepsPerSecond :: Int
+-- stepsPerSecond = 60
 
-startWebSocketsThread :: MVar ServerState -> IO ()
-startWebSocketsThread state =
-    WS.runServer "0.0.0.0" webSocketServerPort $
-        (\rq -> do
-            WS.acceptRequest rq
-            liftIO $ putStrLn "New connection"
-            pubSub <- liftIO $ fmap snd $ readMVar state
-            WS.subscribe pubSub)
+-- microsecondsPerStep :: Int
+-- microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
 
-stepsPerSecond :: Int
-stepsPerSecond = 60
+-- startGameThread :: MVar ServerState -> IO ()
+-- startGameThread state = do
+--     forever $ do
+--         (world, pubSub)       <- takeMVar state
+--         let (world', changes) =  runWriter $ iterateWorld world
+--         putMVar state (world', pubSub)
 
-microsecondsPerStep :: Int
-microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
+--         threadDelay microsecondsPerStep
 
-startGameThread :: MVar ServerState -> IO ()
-startGameThread state = do
-    forever $ do
-        (world, pubSub)       <- takeMVar state
-        let (world', changes) =  runWriter $ iterateWorld world
-        putMVar state (world', pubSub)
+--         let message     = encode changes
+--         B.putStrLn $ "sending " `B.append` message
+--         WS.publish pubSub $ WS.textData $ decodeUtf8 message
 
-        threadDelay microsecondsPerStep
+startScottyThread :: TVar ServerState -> IO ()
+startScottyThread tvar = do
+    let runM m = runReaderT (runWebM m) tvar
+        runActionToIO = runM
 
-        let message     = encode changes
-        B.putStrLn $ "sending " `B.append` message
-        WS.publish pubSub $ WS.textData $ decodeUtf8 message
-
-startScottyThread :: MVar ServerState -> IO ()
-startScottyThread state =
-    scotty 3000 $ do
+    scottyT 3000 runM runActionToIO $ do
         -- middleware logStdoutDev
         -- middleware safeStaticDataFiles
         middleware $ fileEmbed $(embedDir "src/static")
 
         get "/" $ do
-            redirect "/static/index.html"
+            redirect "/register"
+
+        get "/register" $ do
+            render RegistrationForm
+
+        post "/register" $ do
+            -- TODO
+            redirect "/register"
 
 main :: IO ()
 main = do
-    state  <- newServerState
-    mstate <- newMVar state
+    tvar <- newServerState >>= newTVarIO
 
-    void $ forkIO $ startGameThread       mstate
-    void $ forkIO $ startWebSocketsThread mstate
-    startScottyThread     mstate
+    -- void $ forkIO $ startGameThread       mstate
+    -- void $ forkIO $ startWebSocketsThread mstate
+    startScottyThread     tvar
