@@ -22,3 +22,12 @@ modify :: (ServerState -> ServerState) -> WebM ()
 modify f = do
     var <- ask
     liftIO $ atomically $ modifyTVar' var f
+
+modifyWith :: (ServerState -> (a, ServerState)) -> WebM a
+modifyWith f = do
+    var <- ask
+    liftIO $ atomically $ do
+        value <- readTVar var
+        let (a, result) = f value
+        writeTVar var result
+        return a

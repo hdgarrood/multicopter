@@ -63,3 +63,7 @@ addPlayer repo playerName =
 getPlayerById :: PlayerRepository -> PlayerId -> Maybe Player
 getPlayerById repo pid =
     getOne $ players repo @= pid
+
+getAllPlayers :: PlayerRepository -> [Player]
+getAllPlayers repo =
+    toList $ players repo

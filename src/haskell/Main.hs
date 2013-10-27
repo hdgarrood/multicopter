@@ -22,6 +22,7 @@ import FileEmbedMiddleware                  (fileEmbed)
 import Views
 import ServerState
 import WebM
+import Player
 
 -- webSocketServerPort :: Int
 -- webSocketServerPort = 9160
@@ -68,11 +69,17 @@ startScottyThread tvar = do
             redirect "/register"
 
         get "/register" $ do
-            render RegistrationForm
+            render registrationForm
 
         post "/register" $ do
-            -- TODO
-            redirect "/register"
+            (do name <- param "name"
+                player <- webM $ modifyWith (\pr -> addPlayer pr name)
+                redirect "/register")
+            `rescue` (\_ -> redirect "/register")
+
+        get "/registered-players" $ do
+            players <- webM $ gets getAllPlayers
+            render (registeredPlayers players)
 
 main :: IO ()
 main = do
