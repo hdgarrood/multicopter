@@ -74,6 +74,7 @@ startScottyThread tvar = do
         post "/register" $ do
             (do name <- param "name"
                 player <- webM $ modifyWith (\pr -> addPlayer pr name)
+                setHeader "auth_token" (decodeUtf8 $ token player)
                 redirect "/register")
             `rescue` (\_ -> redirect "/register")
 

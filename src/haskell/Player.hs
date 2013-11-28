@@ -12,6 +12,9 @@ newtype PlayerId = PlayerId Int     deriving (Eq, Show, Ord, Data, Typeable, Enu
 newtype Name     = Name ByteString  deriving (Eq, Show, Ord, Data, Typeable)
 newtype Token    = Token ByteString deriving (Eq, Show, Ord, Data, Typeable)
 
+unPlayerId :: PlayerId -> Int
+unPlayerId (PlayerId x) = x
+
 data Player = Player
     { playerId :: PlayerId
     , name     :: ByteString

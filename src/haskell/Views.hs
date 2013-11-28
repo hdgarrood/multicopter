@@ -9,7 +9,7 @@ import           Text.Blaze.Html.Renderer.Text
 import qualified Web.Scotty.Trans (ActionT, html)
 
 import           WebM
-import           Player (Player, name)
+import           Player
 
 withinMainLayout :: Html -> Html
 withinMainLayout content = docTypeHtml $ do
@@ -36,4 +36,18 @@ registrationForm = withinMainLayout $
 registeredPlayers :: [Player] -> Html
 registeredPlayers players = withinMainLayout $ do
     h2 "Registered players:"
-    ul $ mapM_ (li . toHtml . decodeUtf8 . name) players
+    table $ do
+        thead $ do
+            tr $ do
+                th "id"
+                th "name"
+                th "token"
+        tbody $ mapM_ (\p ->
+            let f :: ToMarkup a => a -> Html
+                f        = td . toHtml
+                getId    = unPlayerId . playerId
+                getName  = decodeUtf8 . name
+                getToken = decodeUtf8 . token in
+            do  f $ getId p
+                f $ getName p
+                f $ getToken p) players
