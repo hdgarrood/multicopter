@@ -48,6 +48,7 @@ registeredPlayers players = withinMainLayout $ do
                 getId    = unPlayerId . playerId
                 getName  = decodeUtf8 . name
                 getToken = decodeUtf8 . token in
-            do  f $ getId p
+            tr $ do
+                f $ getId p
                 f $ getName p
                 f $ getToken p) players

@@ -10,9 +10,11 @@ import Network.Wai                          (Middleware)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Data.Aeson                           (encode)
 import qualified Data.Text as T
-import Data.Text.Lazy.Encoding              (decodeUtf8)
-import qualified Data.ByteString.Lazy as B hiding (putStrLn)
-import qualified Data.ByteString.Lazy.Char8 as B (putStrLn)
+import Data.Text.Lazy.Encoding                   (decodeUtf8)
+import qualified Data.ByteString as BS hiding (putStrLn)
+import qualified Data.ByteString.Char8 as BS (putStrLn)
+import qualified Data.ByteString.Lazy as BSL hiding (putStrLn)
+import qualified Data.ByteString.Lazy.Char8 as BSL (putStrLn)
 import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Util.PubSub as WS
 import Data.FileEmbed                       (embedDir)
@@ -23,6 +25,9 @@ import Views
 import ServerState
 import WebM
 import Player
+
+strictToLazy :: BS.ByteString -> BSL.ByteString
+strictToLazy = BSL.fromChunks . (: [])
 
 -- webSocketServerPort :: Int
 -- webSocketServerPort = 9160
@@ -74,7 +79,7 @@ startScottyThread tvar = do
         post "/register" $ do
             (do name <- param "name"
                 player <- webM $ modifyWith (\pr -> addPlayer pr name)
-                setHeader "auth_token" (decodeUtf8 $ token player)
+                setHeader "auth_token" (decodeUtf8 $ strictToLazy $ token player)
                 redirect "/register")
             `rescue` (\_ -> redirect "/register")
 
