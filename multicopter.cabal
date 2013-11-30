@@ -29,6 +29,7 @@ executable multicopter
                     wai,
                     wai-extra,
                     wai-middleware-static,
+                    cookie,
                     websockets,
                     file-embed,
                     ixset
