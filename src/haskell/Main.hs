@@ -119,7 +119,7 @@ startScottyThread tvar = do
         get "/" $ do
             player <- getCurrentPlayer'
             html $ "hooray! you're logged in as " `mappend`
-                (convert $ name player) `mappend`
+                (name player) `mappend`
                 ". <a href=/registered-players>registered players</a>"
 
         get "/registered-players" $ do
