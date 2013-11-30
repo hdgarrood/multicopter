@@ -43,12 +43,14 @@ registeredPlayers players = withinMainLayout $ do
                 th "name"
                 th "token"
         tbody $ mapM_ (\p ->
-            let f :: ToMarkup a => a -> Html
-                f        = td . toHtml
-                getId    = unPlayerId . playerId
-                getName  = decodeUtf8 . name
-                getToken = decodeUtf8 . token in
             tr $ do
-                f $ getId p
-                f $ getName p
-                f $ getToken p) players
+                td' $ getId p
+                td' $ getName p
+                td' $ getToken p) players
+    where
+        td' :: ToMarkup a => a -> Html
+        td' = td . toHtml
+
+        getId    = unPlayerId . playerId
+        getName  = decodeUtf8 . name
+        getToken = decodeUtf8 . token
