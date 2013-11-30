@@ -1,7 +1,6 @@
 module Views where
 
 import           Data.Text.Lazy (Text)
-import           Data.Text.Encoding (decodeUtf8)
 import           Text.Blaze.Html5
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -10,6 +9,8 @@ import qualified Web.Scotty.Trans (ActionT, html)
 
 import           WebM
 import           Player
+import           Conversion
+import           ToMarkupInstances
 
 withinMainLayout :: Html -> Html
 withinMainLayout content = docTypeHtml $ do
@@ -44,13 +45,9 @@ registeredPlayers players = withinMainLayout $ do
                 th "token"
         tbody $ mapM_ (\p ->
             tr $ do
-                td' $ getId p
-                td' $ getName p
-                td' $ getToken p) players
+                td' $ playerId p
+                td' $ name p
+                td' $ token p) players
     where
         td' :: ToMarkup a => a -> Html
         td' = td . toHtml
-
-        getId    = unPlayerId . playerId
-        getName  = decodeUtf8 . name
-        getToken = decodeUtf8 . token

@@ -6,16 +6,18 @@ import qualified Data.ByteString.Lazy       as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Blaze.ByteString.Builder   as Builder
 
+import qualified Data.Text               as T
+import qualified Data.Text.Encoding      as T
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 
-class ConvertibleTo a where
-    toIntermediate :: a -> BSL.ByteString
-
-class ConvertibleFrom a where
+class ConvertTo a where
     fromIntermediate :: BSL.ByteString -> a
 
-convert :: (ConvertibleFrom b, ConvertibleTo a) => a -> b
+class ConvertFrom a where
+    toIntermediate :: a -> BSL.ByteString
+
+convert :: (ConvertFrom a, ConvertTo b) => a -> b
 convert = fromIntermediate . toIntermediate
 
 -- Strict bytestrings
@@ -25,26 +27,34 @@ strictToLazy = BSL.fromChunks . (: [])
 lazyToStrict :: BSL.ByteString -> BS.ByteString
 lazyToStrict = BS.concat . BSL.toChunks
 
-instance ConvertibleTo BS.ByteString where
-    toIntermediate = strictToLazy
-
-instance ConvertibleFrom BS.ByteString where
+instance ConvertTo BS.ByteString where
     fromIntermediate = lazyToStrict
 
--- Lazy bytestrings
-instance ConvertibleTo BSL.ByteString where
-    toIntermediate = id
+instance ConvertFrom BS.ByteString where
+    toIntermediate = strictToLazy
 
-instance ConvertibleFrom BSL.ByteString where
+-- Lazy bytestrings
+instance ConvertTo BSL.ByteString where
     fromIntermediate = id
 
--- Lazy text
-instance ConvertibleTo LT.Text where
-    toIntermediate = LT.encodeUtf8
+instance ConvertFrom BSL.ByteString where
+    toIntermediate = id
 
-instance ConvertibleFrom LT.Text where
+-- Strict text
+instance ConvertFrom T.Text where
+    toIntermediate = strictToLazy . T.encodeUtf8
+
+instance ConvertTo T.Text where
+    fromIntermediate = T.decodeUtf8 . lazyToStrict
+
+-- Lazy text
+instance ConvertTo LT.Text where
     fromIntermediate = LT.decodeUtf8
 
+instance ConvertFrom LT.Text where
+    toIntermediate = LT.encodeUtf8
+
+
 -- ByteString Builders
-instance ConvertibleTo Builder.Builder where
+instance ConvertFrom Builder.Builder where
     toIntermediate = Builder.toLazyByteString

@@ -4,12 +4,13 @@ import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
 import           Data.IxSet
 import           Data.Data (Data, Typeable)
+import           Data.Text.Lazy (Text)
 import           System.Random
 
 import           TokenGenerator
 
 newtype PlayerId = PlayerId Int     deriving (Eq, Show, Ord, Data, Typeable, Enum)
-newtype Name     = Name ByteString  deriving (Eq, Show, Ord, Data, Typeable)
+newtype Name     = Name Text        deriving (Eq, Show, Ord, Data, Typeable)
 newtype Token    = Token ByteString deriving (Eq, Show, Ord, Data, Typeable)
 
 unPlayerId :: PlayerId -> Int
@@ -17,7 +18,7 @@ unPlayerId (PlayerId x) = x
 
 data Player = Player
     { playerId :: PlayerId
-    , name     :: ByteString
+    , name     :: Text
     , token    :: ByteString
     }
     deriving (Data, Typeable, Show, Eq, Ord)
@@ -45,7 +46,7 @@ makePlayerRepository = do
 
 -- Add a player to the repository. Returns the newly added player and the
 -- repository.
-addPlayer :: ByteString -> PlayerRepository -> (Player, PlayerRepository)
+addPlayer :: Text -> PlayerRepository -> (Player, PlayerRepository)
 addPlayer playerName repo =
     let thisId = nextPlayerId repo
         tokGen = tokenGenerator repo
