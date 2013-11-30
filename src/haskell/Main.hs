@@ -13,6 +13,7 @@ import           Web.Cookie
 
 import Data.Aeson (encode)
 import Data.Maybe
+import Data.Monoid
 
 import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as T
@@ -57,8 +58,8 @@ beforehand = matchAny (function
 
 ensureAuthenticated :: ActionT WebM ()
 ensureAuthenticated = do
-    authOk <- authenticate
-    if authOk
+    authed <- isAuthenticated
+    if authed
         then next
         else do
             path <- param "path" :: ActionT WebM Text
@@ -66,22 +67,30 @@ ensureAuthenticated = do
                 "/register" -> handleRegistration
                 _           -> redirect "/register"
 
--- TODO: Set some value which will allow other code to get at the current
--- player easily
-authenticate :: ActionT WebM Bool
-authenticate = do
+getAuthToken :: ActionT WebM (Maybe Token)
+getAuthToken = do
     cookieHeader <- reqHeader "Cookie"
-    case extract cookieHeader of
-        Nothing -> return False
-        Just x  -> checkAuthToken x
+    return $ fmap Token (extract cookieHeader)
     where
         extract :: Maybe Text -> Maybe BS.ByteString
         extract = join . fmap (lookup "auth_token" . parseCookies . convert)
 
-        checkAuthToken :: BS.ByteString -> ActionT WebM Bool
-        checkAuthToken tok = do
-            player <- webM $ gets (getPlayerByToken (Token tok))
-            return $ isJust player
+getCurrentPlayer :: ActionT WebM (Maybe Player)
+getCurrentPlayer = do
+    maybeToken <- getAuthToken
+    case maybeToken of
+        Nothing    -> return Nothing
+        Just token -> webM $ gets (getPlayerByToken token)
+
+-- The call to 'fromJust' is mostly acceptable because any code that calls this
+-- will only be executed after we've checked that someone's logged in.
+getCurrentPlayer' :: ActionT WebM Player
+getCurrentPlayer' = fmap fromJust getCurrentPlayer
+
+-- TODO: Retrieve the player associated with an auth token once per request and
+-- save the result somewhere.
+isAuthenticated :: ActionT WebM Bool
+isAuthenticated = fmap isJust getCurrentPlayer
 
 handleRegistration :: ActionT WebM ()
 handleRegistration = do
@@ -108,7 +117,10 @@ startScottyThread tvar = do
         beforehand ensureAuthenticated
 
         get "/" $ do
-            text "hooray! you're logged in"
+            player <- getCurrentPlayer'
+            html $ "hooray! you're logged in as " `mappend`
+                (convert $ name player) `mappend`
+                ". <a href=/registered-players>registered players</a>"
 
         get "/registered-players" $ do
             players <- webM $ gets getAllPlayers

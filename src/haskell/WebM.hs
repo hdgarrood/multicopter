@@ -7,7 +7,7 @@ import Control.Monad.Reader
 import ServerState
 
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
-    deriving (Monad, MonadIO, MonadReader (TVar ServerState))
+    deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
 
 webM :: MonadTrans t => WebM a -> t WebM a
 webM = lift
