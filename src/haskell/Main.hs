@@ -4,13 +4,15 @@ import Control.Monad.IO.Class               (liftIO)
 import Control.Monad.Writer                 (runWriter)
 import Control.Monad.Reader
 
-import           Network.Wai                    (Middleware)
+import           Network.Wai
 import qualified Network.WebSockets             as WS
 import qualified Network.WebSockets.Util.PubSub as WS
+import           Network.HTTP.Types
 import           Web.Scotty.Trans
 import           Web.Cookie
 
 import Data.Aeson (encode)
+import Data.Maybe
 
 import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as T
@@ -32,25 +34,66 @@ import Views
 import ServerState
 import WebM
 import Player
-
-strictToLazy :: BS.ByteString -> BSL.ByteString
-strictToLazy = BSL.fromChunks . (: [])
-
-lazyToStrict :: BSL.ByteString -> BS.ByteString
-lazyToStrict = BS.concat . BSL.toChunks
+import Conversion
 
 makeCookie :: Text -> Text -> SetCookie
 makeCookie n v = def { setCookieName = n', setCookieValue = v' }
     where
-        conv = lazyToStrict . T.encodeUtf8
-        n' = conv n
-        v' = conv v
+        n' = convert n
+        v' = convert v
 
 renderSetCookie' :: SetCookie -> Text
-renderSetCookie' = T.decodeUtf8 . Builder.toLazyByteString . renderSetCookie
+renderSetCookie' = convert . renderSetCookie
 
 setCookie :: Text -> Text -> ActionT WebM ()
 setCookie n v = setHeader "Set-Cookie" (renderSetCookie' (makeCookie n v))
+
+-- Specify something that should always happen before each request. The given
+-- ActionT WebM() should probably contain a 'next' so that the rest of the
+-- application can be reached.
+beforehand :: ActionT WebM () -> ScottyT WebM ()
+beforehand = matchAny (function
+    (\req -> Just [("path", convert $ rawPathInfo req)]))
+
+ensureAuthenticated :: ActionT WebM ()
+ensureAuthenticated = do
+    authOk <- authenticate
+    if authOk
+        then next
+        else do
+            path <- param "path" :: ActionT WebM Text
+            case path of
+                "/register" -> handleRegistration
+                _           -> redirect "/register"
+
+-- TODO: Set some value which will allow other code to get at the current
+-- player easily
+authenticate :: ActionT WebM Bool
+authenticate = do
+    cookieHeader <- reqHeader "Cookie"
+    case extract cookieHeader of
+        Nothing -> return False
+        Just x  -> checkAuthToken x
+    where
+        extract :: Maybe Text -> Maybe BS.ByteString
+        extract = join . fmap (lookup "auth_token" . parseCookies . convert)
+
+        checkAuthToken :: BS.ByteString -> ActionT WebM Bool
+        checkAuthToken tok = do
+            player <- webM $ gets (getPlayerByToken (Token tok))
+            return $ isJust player
+
+handleRegistration :: ActionT WebM ()
+handleRegistration = do
+    req <- request
+    case requestMethod req of
+        "GET"  -> render registrationForm
+        "POST" -> (do name <- param "name"
+                      player <- webM $ modifyWith (addPlayer name)
+                      setCookie "auth_token" (convert $ token player)
+                      redirect "/")
+                  `rescue` (\_ -> redirect "/register")
+        _      -> status methodNotAllowed405
 
 startScottyThread :: TVar ServerState -> IO ()
 startScottyThread tvar = do
@@ -62,19 +105,10 @@ startScottyThread tvar = do
         -- middleware safeStaticDataFiles
         -- middleware $ fileEmbed $(embedDir "src/static")
 
+        beforehand ensureAuthenticated
+
         get "/" $ do
-            redirect "/register"
-
-        get "/register" $ do
-            render registrationForm
-
-        post "/register" $ do
-            (do name <- param "name"
-                player <- webM $ modifyWith (\pr -> addPlayer pr name)
-                setCookie "auth_token"
-                    (T.decodeUtf8 $ strictToLazy $ token player)
-                redirect "/register")
-            `rescue` (\_ -> redirect "/register")
+            text "hooray! you're logged in"
 
         get "/registered-players" $ do
             players <- webM $ gets getAllPlayers

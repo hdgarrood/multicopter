@@ -45,8 +45,8 @@ makePlayerRepository = do
 
 -- Add a player to the repository. Returns the newly added player and the
 -- repository.
-addPlayer :: PlayerRepository -> ByteString -> (Player, PlayerRepository)
-addPlayer repo playerName =
+addPlayer :: ByteString -> PlayerRepository -> (Player, PlayerRepository)
+addPlayer playerName repo =
     let thisId = nextPlayerId repo
         tokGen = tokenGenerator repo
         (tok, tokGen') = nextToken tokGen
@@ -63,9 +63,14 @@ addPlayer repo playerName =
     in (player, repo')
 
 -- Get a player by ID.
-getPlayerById :: PlayerRepository -> PlayerId -> Maybe Player
-getPlayerById repo pid =
+getPlayerById :: PlayerId -> PlayerRepository -> Maybe Player
+getPlayerById pid repo =
     getOne $ players repo @= pid
+
+-- Get a player by token.
+getPlayerByToken :: Token -> PlayerRepository -> Maybe Player
+getPlayerByToken tok repo =
+    getOne $ players repo @= tok
 
 getAllPlayers :: PlayerRepository -> [Player]
 getAllPlayers repo =
