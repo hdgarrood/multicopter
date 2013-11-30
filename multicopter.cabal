@@ -16,6 +16,7 @@ executable multicopter
                     stm,
                     transformers,
                     text,
+                    text-format,
                     filepath,
                     conduit,
                     blaze-builder,

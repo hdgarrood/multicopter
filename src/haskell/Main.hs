@@ -9,8 +9,9 @@ import Web.Scotty.Trans
 import Network.Wai                          (Middleware)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Data.Aeson                           (encode)
-import qualified Data.Text as T
-import Data.Text.Lazy.Encoding                   (decodeUtf8)
+import Data.Text.Lazy                       (Text)
+import qualified Data.Text.Lazy as T
+import Data.Text.Lazy.Encoding               (decodeUtf8)
 import qualified Data.ByteString as BS hiding (putStrLn)
 import qualified Data.ByteString.Char8 as BS (putStrLn)
 import qualified Data.ByteString.Lazy as BSL hiding (putStrLn)
@@ -18,6 +19,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL (putStrLn)
 import qualified Network.WebSockets as WS
 import qualified Network.WebSockets.Util.PubSub as WS
 import Data.FileEmbed                       (embedDir)
+import qualified Data.Text.Format as TF
 
 import World
 import FileEmbedMiddleware                  (fileEmbed)
@@ -60,13 +62,23 @@ strictToLazy = BSL.fromChunks . (: [])
 --         B.putStrLn $ "sending " `B.append` message
 --         WS.publish pubSub $ WS.textData $ decodeUtf8 message
 
+-- Maximum cookie age, in seconds
+maxCookieAge :: Int
+maxCookieAge = 86400
+
+makeCookieString :: Text -> Text -> Text
+makeCookieString k v = TF.format "{}={}; Expires={}" (k, v, maxCookieAge)
+
+setCookie :: Text -> Text -> ActionT WebM ()
+setCookie k v = setHeader "Set-Cookie" (makeCookieString k v)
+
 startScottyThread :: TVar ServerState -> IO ()
 startScottyThread tvar = do
     let runM m = runReaderT (runWebM m) tvar
         runActionToIO = runM
 
     scottyT 3000 runM runActionToIO $ do
-        -- middleware logStdoutDev
+        middleware logStdoutDev
         -- middleware safeStaticDataFiles
         -- middleware $ fileEmbed $(embedDir "src/static")
 
@@ -79,7 +91,8 @@ startScottyThread tvar = do
         post "/register" $ do
             (do name <- param "name"
                 player <- webM $ modifyWith (\pr -> addPlayer pr name)
-                setHeader "auth_token" (decodeUtf8 $ strictToLazy $ token player)
+                setCookie "auth_token"
+                    (decodeUtf8 $ strictToLazy $ token player)
                 redirect "/register")
             `rescue` (\_ -> redirect "/register")
 
