@@ -6,7 +6,7 @@ build-type:     Simple
 executable multicopter
   hs-source-dirs:   src/haskell test
   main-is:          Main.hs
-  ghc-options:      -threaded
+  ghc-options:      -threaded -Wall
   build-depends:    base,
                     random,
                     bytestring,
