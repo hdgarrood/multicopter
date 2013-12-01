@@ -42,10 +42,10 @@ data World =
     World { slices           :: [Slice]
           , sliceGen         :: StdSliceGen
           -- how far along the world has moved since the last slice was added
-          , offset           :: Double 
+          , offset           :: Double
           -- how far the slices move per step. This will slowly increase over
           -- time.
-          , velocity         :: Double 
+          , velocity         :: Double
           , randomGen        :: StdGen
           } deriving (Show, Read)
 
@@ -68,7 +68,7 @@ data WorldChange = SliceAdded Slice -- A slice was added
                    deriving (Show)
 
 instance ToJSON WorldChange where
-    toJSON (SliceAdded slice) = 
+    toJSON (SliceAdded slice) =
         object [ "type" .= ("sliceAdded"  :: T.Text)
                , "data" .= slice
                ]
@@ -85,7 +85,7 @@ type WorldChanges = [WorldChange]
 
 iterateWorld :: World -> Writer WorldChanges World
 iterateWorld world =
-    return world 
+    return world
         >>= updateSlices
         >>= updateOffset
 
