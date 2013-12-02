@@ -82,6 +82,7 @@ handleRegistration = do
                 Right player -> do
                     setCookie "auth_token" (convert $ playerToken player)
                     redirect "/"
+
 -- Specify something that should always happen before each request. The given
 -- ActionT WebM() should probably contain a 'next' so that the rest of the
 -- application can be reached.
