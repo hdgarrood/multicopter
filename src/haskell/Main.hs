@@ -67,10 +67,10 @@ ensureAuthenticated = do
                 "/register" -> handleRegistration
                 _           -> redirect "/register"
 
-getAuthToken :: ActionT WebM (Maybe Token)
+getAuthToken :: ActionT WebM (Maybe BS.ByteString)
 getAuthToken = do
     cookieHeader <- reqHeader "Cookie"
-    return $ fmap Token (extract cookieHeader)
+    return $ extract cookieHeader
     where
         extract :: Maybe Text -> Maybe BS.ByteString
         extract = join . fmap (lookup "auth_token" . parseCookies . convert)
@@ -80,7 +80,7 @@ getCurrentPlayer = do
     maybeToken <- getAuthToken
     case maybeToken of
         Nothing    -> return Nothing
-        Just token -> webM $ gets (getPlayerByToken token)
+        Just token -> webM $ gets (getPlayerBy (Token token))
 
 -- The call to 'fromJust' is mostly acceptable because any code that calls this
 -- will only be executed after we've checked that someone's logged in.
@@ -97,12 +97,17 @@ handleRegistration = do
     req <- request
     case requestMethod req of
         "GET"  -> render registrationForm
-        "POST" -> (do name <- param "name"
-                      player <- webM $ modifyWith (addPlayer name)
-                      setCookie "auth_token" (convert $ playerToken player)
-                      redirect "/")
-                  `rescue` (\_ -> redirect "/register")
+        "POST" -> signUp `rescue` (\_ -> redirect "/register")
         _      -> status methodNotAllowed405
+    where
+        signUp = do
+            name <- param "name"
+            result <- webM $ modifyWith (addPlayer name)
+            case result of
+                Left err     -> render $ registrationFormWithError err
+                Right player -> do
+                    setCookie "auth_token" (convert $ playerToken player)
+                    redirect "/"
 
 startScottyThread :: TVar ServerState -> IO ()
 startScottyThread tvar = do

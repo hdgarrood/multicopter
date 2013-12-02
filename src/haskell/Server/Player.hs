@@ -5,6 +5,7 @@ import           Data.ByteString (ByteString)
 import           Data.IxSet
 import           Data.Data (Data, Typeable)
 import           Data.Text.Lazy (Text)
+import           Data.Maybe (isJust)
 import           System.Random
 
 import           Server.TokenGenerator
@@ -32,6 +33,7 @@ data PlayerRepository = PlayerRepository
 instance Indexable Player where
     empty = ixSet
                 [ ixFun $ \p -> [ playerId p ]
+                , ixFun $ \p -> [ Name $ playerName p ]
                 , ixFun $ \p -> [ Token $ playerToken p ]
                 ]
 
@@ -44,17 +46,28 @@ makePlayerRepository = do
         , repoPlayers        = empty
         }
 
--- Add a player to the repository. Returns the newly added player and the
--- repository.
-addPlayer :: Text -> PlayerRepository -> (Player, PlayerRepository)
-addPlayer playerName repo =
+-- Add a player to the repository. Returns the newly added player (or an error
+-- Text if something went wrong) and the perhaps-changed repository.
+addPlayer :: Text ->
+             PlayerRepository ->
+             (Either Text Player, PlayerRepository)
+addPlayer name repo =
+    if playerExistsWith (Name name) repo
+        then (Left "There is already a player with that name.", repo)
+        else let (p, repo') = addPlayerUnsafe name repo
+             in (Right p, repo')
+
+-- Adds a player to the repository, regardless of whether this should be
+-- allowed.
+addPlayerUnsafe :: Text -> PlayerRepository -> (Player, PlayerRepository)
+addPlayerUnsafe name repo =
     let thisId = repoNextPlayerId repo
         tokGen = repoTokenGenerator repo
         (tok, tokGen') = nextToken tokGen
         player = Player
-                    { playerId = thisId
-                    , playerName     = playerName
-                    , playerToken    = tok
+                    { playerId    = thisId
+                    , playerName  = name
+                    , playerToken = tok
                     }
         repo' = repo
                     { repoNextPlayerId   = succ thisId
@@ -63,15 +76,17 @@ addPlayer playerName repo =
                     }
     in (player, repo')
 
--- Get a player by ID.
-getPlayerById :: PlayerId -> PlayerRepository -> Maybe Player
-getPlayerById pid repo =
-    getOne $ repoPlayers repo @= pid
+class Typeable a => PlayerIx a where
+    getPlayerBy :: a -> PlayerRepository -> Maybe Player
+    getPlayerBy key repo =
+        getOne $ repoPlayers repo @= key
 
--- Get a player by token.
-getPlayerByToken :: Token -> PlayerRepository -> Maybe Player
-getPlayerByToken tok repo =
-    getOne $ repoPlayers repo @= tok
+    playerExistsWith :: a -> PlayerRepository -> Bool
+    playerExistsWith key repo = isJust $ getPlayerBy key repo
+
+instance PlayerIx PlayerId
+instance PlayerIx Name
+instance PlayerIx Token
 
 getAllPlayers :: PlayerRepository -> [Player]
 getAllPlayers repo =

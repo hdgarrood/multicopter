@@ -1,5 +1,6 @@
 module Server.Views where
 
+import           Prelude hiding (div)
 import           Data.Text.Lazy (Text)
 import           Text.Blaze.Html5
 import qualified Text.Blaze.Html5 as H
@@ -24,18 +25,23 @@ withinMainLayout content = docTypeHtml $ do
             H.div ! A.id "alert-details" $ ""
 
 render :: Html -> Web.Scotty.Trans.ActionT WebM ()
-render = Web.Scotty.Trans.html . renderHtml
+render = Web.Scotty.Trans.html . renderHtml . withinMainLayout
 
 registrationForm :: Html
-registrationForm = withinMainLayout $
+registrationForm =
     form ! A.action "/register" ! A.method "post" $ do
         input ! A.type_ "hidden" ! A.name "back_path" ! A.value "/"
         label ! A.for "name" $ "Your name:"
         input ! A.type_ "text" ! A.name "name" ! A.autofocus "autofocus"
         input ! A.type_ "submit" ! A.value "Submit"
 
+registrationFormWithError :: Text -> Html
+registrationFormWithError err = do
+    div ! A.class_ "error" $ toMarkup err
+    registrationForm
+
 registeredPlayers :: [Player] -> Html
-registeredPlayers players = withinMainLayout $ do
+registeredPlayers players = do
     h2 "Registered players:"
     table $ do
         thead $ do
