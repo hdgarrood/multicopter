@@ -121,6 +121,10 @@ startScottyThread tvar = do
 
         beforehand ensureAuthenticated
 
+        get "/register" $ do
+            -- by this point, we've already logged in
+            redirect "/"
+
         get "/" $ do
             player <- getCurrentPlayer'
             render $ loginNotice (playerName player)
