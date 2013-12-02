@@ -22,11 +22,8 @@ isSliceClear :: Slice -> Int -> Int -> Bool
 isSliceClear s a b =
     isSliceClear' s False
     where
-        isSliceClear' slice state =
-            case slice of
-                []  -> state
-                xs  -> recurse xs state
-        recurse (x:xs) state
+        isSliceClear' []     state = state
+        isSliceClear' (x:xs) state
             | x < a     = isSliceClear' xs (not state)
             | x < b     = False
             | otherwise = state
@@ -226,6 +223,6 @@ makePoissonCumulativeProbs lambda =
     let fac n = product [1..n]
         pmf k = (lambda ^ k) * (exp (negate lambda)) / (fromIntegral $ fac k)
         maxK = floor $ 3 * lambda
-        probs = map pmf [0..maxK]
+        probs = map pmf [0..maxK::Int]
         cumulativeProbs = scanl1 (+) probs
     in  cumulativeProbs
