@@ -1,4 +1,4 @@
-module TokenGenerator where
+module Server.TokenGenerator where
 
 import           System.Random
 import           Control.Monad

@@ -29,12 +29,12 @@ import qualified Blaze.ByteString.Builder   as Builder
 
 import Data.FileEmbed (embedDir)
 
-import World
-import FileEmbedMiddleware                  (fileEmbed)
-import Views
-import ServerState
-import WebM
-import Player
+import Game.World
+import Server.FileEmbedMiddleware                  (fileEmbed)
+import Server.Views
+import Server.ServerState
+import Server.WebM
+import Server.Player
 import Conversion
 
 makeCookie :: Text -> Text -> SetCookie

@@ -1,10 +1,10 @@
-module WebM where
+module Server.WebM where
 
 import Control.Concurrent.STM
 import Control.Monad.IO.Class               (liftIO)
 import Control.Monad.Reader
 
-import ServerState
+import Server.ServerState
 
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
     deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))

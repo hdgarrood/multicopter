@@ -1,4 +1,4 @@
-module Geometry where
+module Game.Geometry where
 
 import Data.Aeson
 

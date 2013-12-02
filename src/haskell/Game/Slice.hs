@@ -1,4 +1,4 @@
-module Slice where
+module Game.Slice where
 
 import System.Random
 import Control.Monad.Random

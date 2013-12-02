@@ -1,4 +1,4 @@
-module FileEmbedMiddleware where
+module Server.FileEmbedMiddleware where
 
 import qualified Data.ByteString as B
 import qualified Data.Text as T

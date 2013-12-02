@@ -1,4 +1,4 @@
-module Views where
+module Server.Views where
 
 import           Data.Text.Lazy (Text)
 import           Text.Blaze.Html5
@@ -7,10 +7,10 @@ import qualified Text.Blaze.Html5.Attributes as A
 import           Text.Blaze.Html.Renderer.Text
 import qualified Web.Scotty.Trans (ActionT, html)
 
-import           WebM
-import           Player
+import           Server.WebM
+import           Server.Player
+import           Server.ToMarkupInstances
 import           Conversion
-import           ToMarkupInstances
 
 withinMainLayout :: Html -> Html
 withinMainLayout content = docTypeHtml $ do

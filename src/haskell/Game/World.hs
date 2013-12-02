@@ -1,4 +1,4 @@
-module World where
+module Game.World where
 
 import System.Random
 import Control.Monad.Random
@@ -7,8 +7,8 @@ import Control.Monad.Writer
 import qualified Data.Text as T
 import Data.Aeson
 
-import Slice
-import Geometry
+import Game.Slice
+import Game.Geometry
 
 -- Is a Vect within a Rect?
 withinRect :: (Num a, Ord a) => Vect a -> Rect a -> Bool

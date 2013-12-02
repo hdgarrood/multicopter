@@ -1,4 +1,4 @@
-module SafeStaticDataFileMiddleware (safeStaticDataFiles) where
+module Server.SafeStaticDataFileMiddleware (safeStaticDataFiles) where
 
 import System.Directory
 import qualified Data.Text as T

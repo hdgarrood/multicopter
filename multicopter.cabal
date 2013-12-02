@@ -8,6 +8,7 @@ executable multicopter
   main-is:          Main.hs
   ghc-options:      -threaded -Wall
   build-depends:    base,
+                    data-default,
                     random,
                     bytestring,
                     containers,
