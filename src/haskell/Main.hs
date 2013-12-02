@@ -99,7 +99,7 @@ handleRegistration = do
         "GET"  -> render registrationForm
         "POST" -> (do name <- param "name"
                       player <- webM $ modifyWith (addPlayer name)
-                      setCookie "auth_token" (convert $ token player)
+                      setCookie "auth_token" (convert $ playerToken player)
                       redirect "/")
                   `rescue` (\_ -> redirect "/register")
         _      -> status methodNotAllowed405
@@ -119,7 +119,7 @@ startScottyThread tvar = do
         get "/" $ do
             player <- getCurrentPlayer'
             html $ "hooray! you're logged in as " `mappend`
-                (name player) `mappend`
+                (playerName player) `mappend`
                 ". <a href=/registered-players>registered players</a>"
 
         get "/registered-players" $ do

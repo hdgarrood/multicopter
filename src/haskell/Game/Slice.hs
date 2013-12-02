@@ -173,14 +173,14 @@ startNewObstacleSequence gen slice = do
 
     obstacleWidth       <- getRandomR (minObstacleWidth, maxObstacleWidth)
 
-    let roof            =  slice !! 0
-    let floor           =  slice !! 1
-    obstacleOffset      <- getRandomR (roof, floor - obstacleWidth)
+    let roofW           =  slice !! 0
+    let floorW          =  slice !! 1 -- to avoid shadowing Prelude.floor
+    obstacleOffset      <- getRandomR (roofW, floorW - obstacleWidth)
 
     let gen'            =  gen { slicesUntilNextObstacle = slicesUntilNext
                                }
     return $
-        ( [roof, obstacleOffset, obstacleOffset + obstacleWidth, floor]
+        ( [roofW, obstacleOffset, obstacleOffset + obstacleWidth, floorW]
         , gen'
         )
 

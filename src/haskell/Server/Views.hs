@@ -43,11 +43,11 @@ registeredPlayers players = withinMainLayout $ do
                 th "id"
                 th "name"
                 th "token"
-        tbody $ mapM_ (\p ->
+        tbody $ mapM_ (\pl ->
             tr $ do
-                td' $ playerId p
-                td' $ name p
-                td' $ token p) players
+                td' $ playerId pl
+                td' $ playerName pl
+                td' $ playerToken pl) players
     where
         td' :: ToMarkup a => a -> Html
         td' = td . toHtml

@@ -17,62 +17,62 @@ unPlayerId :: PlayerId -> Int
 unPlayerId (PlayerId x) = x
 
 data Player = Player
-    { playerId :: PlayerId
-    , name     :: Text
-    , token    :: ByteString
+    { playerId    :: PlayerId
+    , playerName  :: Text
+    , playerToken :: ByteString
     }
     deriving (Data, Typeable, Show, Eq, Ord)
 
 data PlayerRepository = PlayerRepository
-    { nextPlayerId   :: PlayerId
-    , tokenGenerator :: TokenGenerator
-    , players        :: IxSet Player
+    { repoNextPlayerId   :: PlayerId
+    , repoTokenGenerator :: TokenGenerator
+    , repoPlayers        :: IxSet Player
     }
 
 instance Indexable Player where
     empty = ixSet
                 [ ixFun $ \p -> [ playerId p ]
-                , ixFun $ \p -> [ Token $ token p ]
+                , ixFun $ \p -> [ Token $ playerToken p ]
                 ]
 
 makePlayerRepository :: IO PlayerRepository
 makePlayerRepository = do
     tokGen <- getTokenGenerator
     return $ PlayerRepository
-        { nextPlayerId   = PlayerId 1
-        , tokenGenerator = tokGen
-        , players        = empty
+        { repoNextPlayerId   = PlayerId 1
+        , repoTokenGenerator = tokGen
+        , repoPlayers        = empty
         }
 
 -- Add a player to the repository. Returns the newly added player and the
 -- repository.
 addPlayer :: Text -> PlayerRepository -> (Player, PlayerRepository)
 addPlayer playerName repo =
-    let thisId = nextPlayerId repo
-        tokGen = tokenGenerator repo
+    let thisId = repoNextPlayerId repo
+        tokGen = repoTokenGenerator repo
         (tok, tokGen') = nextToken tokGen
         player = Player
                     { playerId = thisId
-                    , name     = playerName
-                    , token    = tok
+                    , playerName     = playerName
+                    , playerToken    = tok
                     }
         repo' = repo
-                    { nextPlayerId   = succ thisId
-                    , tokenGenerator = tokGen'
-                    , players        = insert player $ players repo
+                    { repoNextPlayerId   = succ thisId
+                    , repoTokenGenerator = tokGen'
+                    , repoPlayers        = insert player $ repoPlayers repo
                     }
     in (player, repo')
 
 -- Get a player by ID.
 getPlayerById :: PlayerId -> PlayerRepository -> Maybe Player
 getPlayerById pid repo =
-    getOne $ players repo @= pid
+    getOne $ repoPlayers repo @= pid
 
 -- Get a player by token.
 getPlayerByToken :: Token -> PlayerRepository -> Maybe Player
 getPlayerByToken tok repo =
-    getOne $ players repo @= tok
+    getOne $ repoPlayers repo @= tok
 
 getAllPlayers :: PlayerRepository -> [Player]
 getAllPlayers repo =
-    toList $ players repo
+    toList $ repoPlayers repo

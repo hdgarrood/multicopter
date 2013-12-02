@@ -96,8 +96,8 @@ updateSlices world =
         else return world
 
 needsNewSlice :: World -> Bool
-needsNewSlice (World _ _ offset _ _ ) =
-    floor offset >= sliceWidth
+needsNewSlice w =
+    floor (offset w) >= sliceWidth
 
 shiftSlices :: World -> Writer WorldChanges World
 shiftSlices world = do
