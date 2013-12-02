@@ -123,9 +123,7 @@ startScottyThread tvar = do
 
         get "/" $ do
             player <- getCurrentPlayer'
-            html $ "hooray! you're logged in as " `mappend`
-                (playerName player) `mappend`
-                ". <a href=/registered-players>registered players</a>"
+            render $ loginNotice (playerName player)
 
         get "/registered-players" $ do
             players <- webM $ gets getAllPlayers

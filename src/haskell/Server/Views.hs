@@ -2,6 +2,7 @@ module Server.Views where
 
 import           Prelude hiding (div)
 import           Data.Text.Lazy (Text)
+import           Data.Text.Format as TF
 import           Text.Blaze.Html5
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -26,6 +27,11 @@ withinMainLayout content = docTypeHtml $ do
 
 render :: Html -> Web.Scotty.Trans.ActionT WebM ()
 render = Web.Scotty.Trans.html . renderHtml . withinMainLayout
+
+loginNotice :: Text -> Html
+loginNotice name = div $ do
+    toMarkup $ (TF.format "hooray! you're logged in as {}. " (Only name))
+    a ! A.href "/registered-players" $ "registered players"
 
 registrationForm :: Html
 registrationForm =
