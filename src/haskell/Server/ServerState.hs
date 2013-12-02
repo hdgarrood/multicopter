@@ -1,7 +1,7 @@
 module Server.ServerState where
 
 import Server.Player
-import Game
+import Game.Game
 
 type ServerState = PlayerRepository
 

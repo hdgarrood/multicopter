@@ -1,4 +1,4 @@
-module Game where
+module Game.Game where
 
 import Control.Monad.Writer
 import Data.Default
@@ -23,7 +23,7 @@ data HeliEvents = HeliEvents
     { heliNewDirection     :: Maybe Direction
     , heliCollidedWithWall :: Bool
     , heliQueuedCollisions :: [Collision]
-    }   
+    }
 
 instance Default HeliEvents where
     def = HeliEvents
@@ -52,7 +52,7 @@ data GameObject = WorldObject World
 
 
 type GameObjectEvents = Maybe HeliEvents
-   
+
 -- Given all the input data since the last step and a game object, return a thing
 -- which contains all the information needed for that object's doLogic call later this
 -- step.
