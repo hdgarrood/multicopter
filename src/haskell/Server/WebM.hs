@@ -1,5 +1,6 @@
 module Server.WebM where
 
+import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad.IO.Class               (liftIO)
 import Control.Monad.Reader
@@ -8,6 +9,13 @@ import Server.ServerState
 
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
     deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
+
+scottyWebM :: Int -> TVar ServerState -> ScottyT WebM () -> IO ()
+scottyWebM port tvar app =
+    scottyT port runM runActionToIO app
+    where
+        runM m = runReaderT (runWebM m) tvar
+        runActionToIO = runM
 
 webM :: MonadTrans t => WebM a -> t WebM a
 webM = lift
