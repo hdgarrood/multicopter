@@ -43,11 +43,11 @@ makeWorld :: IO World
 makeWorld = do
     gen <- getStdGen
     return $ World
-        { slices           = replicate maxSlicesInWorld emptySlice
-        , sliceGen         = makeStdSliceGen
-        , offset           = 0
-        , velocity         = startingVelocity
-        , randomGen        = gen
+        { worldSlices           = replicate maxSlicesInWorld emptySlice
+        , worldSliceGen         = makeSliceGen
+        , worldOffset           = 0
+        , worldVelocity         = startingVelocity
+        , worldRandomGen        = gen
         }
 
 iterateWorld :: World -> Writer WorldChanges World
@@ -64,33 +64,35 @@ updateSlices world =
 
 needsNewSlice :: World -> Bool
 needsNewSlice w =
-    floor (offset w) >= sliceWidth
+    floor (worldOffset w) >= sliceWidth
 
 shiftSlices :: World -> Writer WorldChanges World
 shiftSlices world = do
-    let gen     = randomGen world
-    let ((newSlice, sliceGen'), gen') = runRand
-                                            (nextSlice $ sliceGen world) gen
-    let sls     = slices world
+    let gen     = worldRandomGen world
+    let result  = runRand (nextSlice $ worldSliceGen world) gen
+    let ((newSlice, sliceGen'), gen') = result
+
+    let sls     = worldSlices world
+    -- TODO: choose a data structure with better appending
     let sls'    = drop 1 sls ++ [newSlice]
-    let offset' = offset world - (fromIntegral sliceWidth)
+    let offset' = worldOffset world - (fromIntegral sliceWidth)
 
     tell $ [SliceAdded newSlice]
-    return world { sliceGen  = sliceGen'
-                 , slices    = sls'
-                 , randomGen = gen'
-                 , offset    = offset'
+    return world { worldSliceGen  = sliceGen'
+                 , worldSlices    = sls'
+                 , worldRandomGen = gen'
+                 , worldOffset    = offset'
                  }
 
 updateOffset :: World -> Writer WorldChanges World
 updateOffset world = do
-    let vel     = velocity world
+    let vel     = worldVelocity world
     let vel'    = vel + worldAcceleration
-    let offset' = offset world + vel'
+    let offset' = worldOffset world + vel'
 
     tell $ [SlicesMoved $ round offset']
-    return world { offset = offset'
-                 , velocity = vel'
+    return world { worldOffset = offset'
+                 , worldVelocity = vel'
                  }
 
 -- If a rectangular object is occupying the space (left edge, right edge) in
@@ -102,5 +104,5 @@ overlappingSlices (left, right) w =
     (dropWhile (not . overlaps . fst)) $
     slicesWithX
     where
-        slicesWithX = zip (map (* sliceWidth) [0..]) (slices w)
+        slicesWithX = zip (map (* sliceWidth) [0..]) (worldSlices w)
         overlaps sliceX = left < (sliceX + sliceWidth) || right > sliceX

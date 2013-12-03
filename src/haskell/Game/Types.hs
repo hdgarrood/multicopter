@@ -13,14 +13,14 @@ data Game = Game
 
 -- === WORLD ===
 data World =
-    World { slices           :: [Slice]
-          , sliceGen         :: StdSliceGen
+    World { worldSlices           :: [Slice]
+          , worldSliceGen         :: SliceGen
           -- how far along the world has moved since the last slice was added
-          , offset           :: Double
+          , worldOffset           :: Double
           -- how far the slices move per step. This will slowly increase over
           -- time.
-          , velocity         :: Double
-          , randomGen        :: StdGen
+          , worldVelocity         :: Double
+          , worldRandomGen        :: StdGen
           } deriving (Show, Read)
 
 -- Any piece of information which we send back to clients regarding a change of
@@ -94,14 +94,11 @@ data HeliChange = HeliMoved Int
 -- we're starting inside an obstacle (since we will always have a roof).
 type Slice = [Int]
 
-class SliceGen g where
-    nextSlice :: g -> Rand StdGen (Slice, g)
-
--- A StdSliceGen can be thought of as a machine which takes randomness and
--- turns it into slices. Note than no randomness is stored within the
--- StdSliceGen; it must be provided in order for it to produce slices.
-data StdSliceGen =
-    StdSliceGen
+-- A SliceGen can be thought of as a machine which takes randomness and turns
+-- it into slices. Note than no randomness is stored within the SliceGen; it
+-- must be provided in order for it to produce slices.
+data SliceGen =
+    SliceGen
         { roofWidthGen  :: EdgeWidthGen
         , floorWidthGen :: EdgeWidthGen
         , obstacleGen   :: ObstacleGen

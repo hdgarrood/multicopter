@@ -56,9 +56,9 @@ gracePeriod = 20
 emptySlice :: Slice
 emptySlice = [0]
 
-makeStdSliceGen :: StdSliceGen
-makeStdSliceGen =
-    StdSliceGen
+makeSliceGen :: SliceGen
+makeSliceGen =
+    SliceGen
         { roofWidthGen  = makeEdgeWidthGen
         , floorWidthGen = makeEdgeWidthGen
         , obstacleGen   = makeObstacleGen
@@ -148,31 +148,31 @@ startNewObstacleSequence gen slice = do
         , gen'
         )
 
-instance SliceGen StdSliceGen where
-    nextSlice gen = do
-        -- Generate the floor
-        let floorGen            =  floorWidthGen gen
-        (floorWidth, floorGen') <- nextEdgeWidth floorGen
-        let floorWidth'         =  sliceHeight - floorWidth
-        let slice               =  [floorWidth']
+nextSlice :: SliceGen -> Rand StdGen (Slice, SliceGen)
+nextSlice gen = do
+    -- Generate the floor
+    let floorGen            =  floorWidthGen gen
+    (floorWidth, floorGen') <- nextEdgeWidth floorGen
+    let floorWidth'         =  sliceHeight - floorWidth
+    let slice               =  [floorWidth']
 
-        -- Generate the roof
-        let roofGen             =  roofWidthGen gen
-        (roofWidth, roofGen')   <- nextEdgeWidth roofGen
-        let slice'              =  roofWidth : slice
+    -- Generate the roof
+    let roofGen             =  roofWidthGen gen
+    (roofWidth, roofGen')   <- nextEdgeWidth roofGen
+    let slice'              =  roofWidth : slice
 
 
-        -- Maybe generate an obstacle
-        let oGen                =  obstacleGen gen
-        (slice'', oGen')        <- addObstacle oGen slice'
+    -- Maybe generate an obstacle
+    let oGen                =  obstacleGen gen
+    (slice'', oGen')        <- addObstacle oGen slice'
 
-        -- Update the StdSliceGen
-        let gen'                =  gen { roofWidthGen  = roofGen'
-                                       , obstacleGen   = oGen'
-                                       , floorWidthGen = floorGen'
-                                       }
+    -- Update the SliceGen
+    let gen'                =  gen { roofWidthGen  = roofGen'
+                                   , obstacleGen   = oGen'
+                                   , floorWidthGen = floorGen'
+                                   }
 
-        return (slice'', gen')
+    return (slice'', gen')
 
 -- Given a value for lambda, make a cumulative poission distribution function.
 makePoisson :: Double -> Double -> Int
