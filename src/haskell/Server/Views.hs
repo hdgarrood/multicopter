@@ -11,8 +11,8 @@ import qualified Web.Scotty.Trans (ActionT, html)
 
 import           Server.WebM
 import           Server.Player
-import           Server.ToMarkupInstances
-import           Conversion
+import           Server.ToMarkupInstances()
+import           Conversion()
 
 withinMainLayout :: Html -> Html
 withinMainLayout content = docTypeHtml $ do
