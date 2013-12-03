@@ -6,7 +6,6 @@ import           Control.Monad.Random
 import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Char8 (singleton)
-import           Data.Data (Data, Typeable)
 
 newtype TokenGenerator = TokenGenerator StdGen deriving (Show)
 

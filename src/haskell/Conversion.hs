@@ -1,9 +1,7 @@
 module Conversion (convert) where
 
 import qualified Data.ByteString            as BS
-import qualified Data.ByteString.Char8      as BS
 import qualified Data.ByteString.Lazy       as BSL
-import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Blaze.ByteString.Builder   as Builder
 
 import qualified Data.Text               as T

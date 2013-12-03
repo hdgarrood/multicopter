@@ -4,9 +4,6 @@ import System.Random
 import Control.Monad.Random
 import Control.Monad.Writer
 
-import qualified Data.Text as T
-import Data.Aeson
-
 import Game.Types
 import Game.Slice
 import Game.Geometry

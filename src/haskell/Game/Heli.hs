@@ -32,17 +32,17 @@ handleEvents input game heli =
         unless (isWorldClear world heli) (tell [CollidedWithWall])
 
         -- TODO: handle player collisions
-    where
-        isWorldClear :: World -> Heli -> Bool
-        isWorldClear w h = check slices
-            where
-                check  = all (\s -> isSliceClear s top bottom)
-                top    = heliPosition heli
-                bottom = top + heliHeight
 
-                slices = overlappingSlices (left, right) w
-                left   = heliXPosition
-                right  = left + heliWidth
+isWorldClear :: World -> Heli -> Bool
+isWorldClear w h = check slices
+    where
+        check  = all (\s -> isSliceClear s top bottom)
+        top    = heliPosition h
+        bottom = top + heliHeight
+
+        slices = overlappingSlices (left, right) w
+        left   = heliXPosition
+        right  = left + heliWidth
 
 doLogic :: Heli -> HeliEvents -> Writer [HeliChange] Heli
-doLogic h evs = return h
+doLogic h _ = return h
