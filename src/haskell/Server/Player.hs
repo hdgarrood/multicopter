@@ -1,14 +1,12 @@
 module Server.Player where
 
-import qualified Data.ByteString as B
-import           Data.ByteString (ByteString)
-import           Data.IxSet
-import           Data.Data (Data, Typeable)
-import           Data.Text.Lazy (Text)
-import           Data.Maybe (isJust)
-import           System.Random
+import Data.ByteString (ByteString)
+import Data.IxSet
+import Data.Data (Data, Typeable)
+import Data.Text.Lazy (Text)
+import Data.Maybe (isJust)
 
-import           Server.TokenGenerator
+import Server.TokenGenerator
 
 newtype PlayerId = PlayerId Int     deriving (Eq, Show, Ord, Data, Typeable, Enum)
 newtype Name     = Name Text        deriving (Eq, Show, Ord, Data, Typeable)
