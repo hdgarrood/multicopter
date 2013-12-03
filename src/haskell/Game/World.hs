@@ -7,6 +7,7 @@ import Control.Monad.Writer
 import qualified Data.Text as T
 import Data.Aeson
 
+import Game.Types
 import Game.Slice
 import Game.Geometry
 
@@ -38,17 +39,6 @@ startingVelocity = 5
 worldAcceleration :: Double
 worldAcceleration = 0.001
 
-data World =
-    World { slices           :: [Slice]
-          , sliceGen         :: StdSliceGen
-          -- how far along the world has moved since the last slice was added
-          , offset           :: Double
-          -- how far the slices move per step. This will slowly increase over
-          -- time.
-          , velocity         :: Double
-          , randomGen        :: StdGen
-          } deriving (Show, Read)
-
 makeWorld :: IO World
 makeWorld = do
     gen <- getStdGen
@@ -60,34 +50,11 @@ makeWorld = do
         , randomGen        = gen
         }
 
--- Any piece of information which we send back to clients regarding a change of
--- state in the world is packaged up as a WorldChange.
-data WorldChange = SliceAdded Slice -- A slice was added
-                 | SlicesMoved Int -- Tells how far the slices moved
-                 | PlayerMoved (Vect Int) -- Gives new player positions
-                   deriving (Show)
-
-instance ToJSON WorldChange where
-    toJSON (SliceAdded slice) =
-        object [ "type" .= ("sliceAdded"  :: T.Text)
-               , "data" .= slice
-               ]
-    toJSON (SlicesMoved dist) =
-        object [ "type" .= ("slicesMoved" :: T.Text)
-               , "data" .= dist
-               ]
-    toJSON (PlayerMoved vec) =
-        object [ "type" .= ("playerMoved" :: T.Text)
-               , "data" .= vec
-               ]
-
-type WorldChanges = [WorldChange]
-
 iterateWorld :: World -> Writer WorldChanges World
 iterateWorld world =
-    return world
-        >>= updateSlices
-        >>= updateOffset
+    foldl (>>=) (return world) actions
+    where
+        actions = [updateSlices, updateOffset]
 
 updateSlices :: World -> Writer WorldChanges World
 updateSlices world =
@@ -125,3 +92,15 @@ updateOffset world = do
     return world { offset = offset'
                  , velocity = vel'
                  }
+
+-- If a rectangular object is occupying the space (left edge, right edge) in
+-- the World, return the slices that it overlaps
+overlappingSlices :: (Int, Int) -> World -> [Slice]
+overlappingSlices (left, right) w =
+    (map snd) .
+    (takeWhile (overlaps . fst)) .
+    (dropWhile (not . overlaps . fst)) $
+    slicesWithX
+    where
+        slicesWithX = zip (map (* sliceWidth) [0..]) (slices w)
+        overlaps sliceX = left < (sliceX + sliceWidth) || right > sliceX

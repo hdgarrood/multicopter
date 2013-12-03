@@ -3,18 +3,7 @@ module Game.Slice where
 import System.Random
 import Control.Monad.Random
 
--- A slice of the visible world. Players will spend most of the time across
--- two slices. Has a roof, a floor, and sometimes a third obstacle in the
--- middle.
---
--- Obstacles are the exact same widths as the slice they occupy.
---
--- A Slice is represented as a list of Ints, which are the edges of the
--- contained obstacles.
---
--- When checking whether a particular space in a slice is clear, we assume that
--- we're starting inside an obstacle (since we will always have a roof).
-type Slice = [Int]
+import Game.Types
 
 -- Is an object occupying the vertical space from a to b colliding with any
 -- obstacles in a slice?
@@ -27,9 +16,6 @@ isSliceClear s a b =
             | x < a     = isSliceClear' xs (not state)
             | x < b     = False
             | otherwise = state
-
-class SliceGen g where
-    nextSlice :: g -> Rand StdGen (Slice, g)
 
 -- TODO: Make these parameters of SliceGens?
 -- The height of a slice.
@@ -70,16 +56,6 @@ gracePeriod = 20
 emptySlice :: Slice
 emptySlice = [0]
 
--- A StdSliceGen can be thought of as a machine which takes randomness and
--- turns it into slices. Note than no randomness is stored within the
--- StdSliceGen; it must be provided in order for it to produce slices.
-data StdSliceGen =
-    StdSliceGen
-        { roofWidthGen  :: EdgeWidthGen
-        , floorWidthGen :: EdgeWidthGen
-        , obstacleGen   :: ObstacleGen
-        } deriving (Show, Read)
-
 makeStdSliceGen :: StdSliceGen
 makeStdSliceGen =
     StdSliceGen
@@ -88,13 +64,6 @@ makeStdSliceGen =
         , obstacleGen   = makeObstacleGen
         }
 
-data EdgeWidthGen =
-    EdgeWidthGen
-        { remainingSlicesInSequence :: Int
-        , currentGradient           :: Int
-        , currentWidth              :: Int
-        } deriving (Show, Read)
-
 makeEdgeWidthGen :: EdgeWidthGen
 makeEdgeWidthGen =
     EdgeWidthGen
@@ -102,11 +71,6 @@ makeEdgeWidthGen =
         , currentGradient           = 0
         , currentWidth              = (maxEdgeWidth + minEdgeWidth) `div` 2
         }
-
-data ObstacleGen =
-    ObstacleGen
-        { slicesUntilNextObstacle :: Int
-        } deriving (Show, Read)
 
 makeObstacleGen :: ObstacleGen
 makeObstacleGen =

@@ -2,7 +2,6 @@ module Server.WebM where
 
 import Web.Scotty.Trans
 import Control.Concurrent.STM
-import Control.Monad.IO.Class               (liftIO)
 import Control.Monad.Reader
 
 import Server.ServerState
