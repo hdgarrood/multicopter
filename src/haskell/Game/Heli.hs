@@ -8,6 +8,15 @@ import Game.World
 import Game.Slice
 import Game.Constants
 
+makeHeli :: HeliId -> Heli
+makeHeli hId = Heli
+    { heliId        = hId
+    , heliPosition  = 0
+    , heliVelocity  = 0
+    , heliDirection = Down
+    , heliIsAlive   = True
+    }
+
 shouldStartGame :: HeliInputData -> Bool
 shouldStartGame = any f
     where

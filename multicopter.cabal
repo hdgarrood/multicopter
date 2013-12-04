@@ -37,4 +37,6 @@ executable multicopter
   extensions:       GeneralizedNewtypeDeriving,
                     OverloadedStrings,
                     DeriveDataTypeable,
-                    TemplateHaskell
+                    TemplateHaskell,
+                    TypeSynonymInstances,
+                    FlexibleInstances

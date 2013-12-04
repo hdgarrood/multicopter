@@ -5,6 +5,7 @@ import Data.IxSet
 import Data.Data (Data, Typeable)
 import Data.Text.Lazy (Text)
 import Data.Maybe (isJust)
+import Control.Monad.Random
 
 import Server.TokenGenerator
 
@@ -35,7 +36,7 @@ instance Indexable Player where
                 , ixFun $ \p -> [ Token $ playerToken p ]
                 ]
 
-makePlayerRepository :: IO PlayerRepository
+makePlayerRepository :: Rand StdGen PlayerRepository
 makePlayerRepository = do
     tokGen <- getTokenGenerator
     return $ PlayerRepository

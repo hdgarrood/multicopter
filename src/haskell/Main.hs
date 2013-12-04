@@ -5,7 +5,7 @@ import Server.ServerState
 
 main :: IO ()
 main = do
-    tvar <- newServerState >>= newTVarIO
+    tvar <- newServerState' >>= newTVarIO
     startScottyApp tvar
 
     -- void $ forkIO $ startGameThread       mstate

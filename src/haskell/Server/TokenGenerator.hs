@@ -14,10 +14,10 @@ tokenLength :: Int
 tokenLength = 50
 
 mkTokenGenerator :: Int -> TokenGenerator
-mkTokenGenerator n = TokenGenerator (mkStdGen n)
+mkTokenGenerator = TokenGenerator . mkStdGen
 
-getTokenGenerator :: IO TokenGenerator
-getTokenGenerator = fmap TokenGenerator getStdGen
+getTokenGenerator :: Rand StdGen TokenGenerator
+getTokenGenerator = fmap TokenGenerator getSplit
 
 nextToken :: TokenGenerator -> (ByteString, TokenGenerator)
 nextToken (TokenGenerator gen) =

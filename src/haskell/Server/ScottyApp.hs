@@ -54,7 +54,7 @@ getCurrentPlayer = do
     maybeToken <- getAuthToken
     case maybeToken of
         Nothing    -> return Nothing
-        Just token -> webM $ gets (getPlayerBy (Token token))
+        Just token -> webM $ gets (getPlayerBy (Token token) . serverPlayers)
 
 -- The call to 'fromJust' is mostly acceptable because any code that calls this
 -- will only be executed after we've checked that someone's logged in.
@@ -76,7 +76,7 @@ handleRegistration = do
     where
         signUp = do
             name <- param "name"
-            result <- webM $ modifyWith (addPlayer name)
+            result <- webM $ modifyPlayersWith (addPlayer name)
             case result of
                 Left err     -> render $ registrationFormWithError err
                 Right player -> do
@@ -104,5 +104,5 @@ startScottyApp tvar =
             render $ loginNotice (playerName player)
 
         get "/registered-players" $ do
-            players <- webM $ gets getAllPlayers
+            players <- webM $ gets (getAllPlayers . serverPlayers)
             render (registeredPlayers players)

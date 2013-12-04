@@ -5,6 +5,8 @@ import Control.Concurrent.STM
 import Control.Monad.Reader
 
 import Server.ServerState
+import Server.GameRepository
+import Server.Player
 
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
     deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
@@ -38,3 +40,17 @@ modifyWith f = do
         let (a, result) = f value
         writeTVar var result
         return a
+
+modifyPlayersWith :: (PlayerRepository -> (a, PlayerRepository)) -> WebM a
+modifyPlayersWith f = modifyWith f'
+    where
+        f' ss =
+            let (x, pr') = f (serverPlayers ss)
+            in  (x, ss { serverPlayers = pr' })
+
+modifyGamesWith :: (GameRepository -> (a, GameRepository)) -> WebM a
+modifyGamesWith f = modifyWith f'
+    where
+        f' ss =
+            let (x, gr') = f (serverGames ss)
+            in  (x, ss { serverGames = gr' })

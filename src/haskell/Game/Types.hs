@@ -3,13 +3,33 @@ module Game.Types where
 import Data.Aeson
 import qualified Data.Text.Lazy as T
 import System.Random
-import Control.Monad.Random
 
 -- === GAME ===
+newtype GameId = GameId Int deriving (Eq, Ord, Show, Enum)
+
 data Game = Game
-    { gameWorld   :: World
-    , gameHelis   :: [Heli]
+    { gameId    :: GameId
+    , gameWorld :: World
+    , gameHelis :: [Heli]
+    , gameState :: GameState
     }
+
+data GameState = NotStarted
+               | InProgress
+               | Finished
+               deriving (Show, Eq)
+
+data GameChange = GameStarted
+                | GameFinished
+                | WC WorldChange
+                | HC HeliChange
+
+type GameChanges = [GameChange]
+
+class ToGameChanges a where
+    toGameChanges :: a -> GameChanges
+
+data InputData = InputData
 
 -- === WORLD ===
 data World =
@@ -41,15 +61,20 @@ instance ToJSON WorldChange where
 
 type WorldChanges = [WorldChange]
 
+instance ToGameChanges WorldChanges where
+    toGameChanges = map WC
+
 -- === HELI ===
 -- Helis only move in 1 dimension, which makes it easier. The top of the screen
 -- is x=0; positive is down.
+newtype HeliId = HeliId Int deriving (Eq, Ord, Show, Enum)
 type Position = Int
 type Velocity = Int
 data Direction = Down | Up
 
 data Heli = Heli
-    { heliPosition  :: Position
+    { heliId        :: HeliId
+    , heliPosition  :: Position
     , heliVelocity  :: Velocity
     , heliDirection :: Direction
     , heliIsAlive   :: Bool
@@ -79,6 +104,12 @@ type HeliInputData = [HeliSignal]
 -- is sent back as a HeliChange.
 data HeliChange = HeliMoved Int
                 | HeliCrashed
+
+-- TODO: less naive implementation?
+type HeliChanges = [HeliChange]
+
+instance ToGameChanges HeliChanges where
+    toGameChanges = map HC
 
 -- === SLICE ===
 -- A slice of the visible world. Players will spend most of the time across

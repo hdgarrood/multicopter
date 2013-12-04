@@ -36,9 +36,9 @@ startingVelocity = 5
 worldAcceleration :: Double
 worldAcceleration = 0.001
 
-makeWorld :: IO World
+makeWorld :: Rand StdGen World
 makeWorld = do
-    gen <- getStdGen
+    gen <- getSplit
     return $ World
         { worldSlices           = replicate maxSlicesInWorld emptySlice
         , worldSliceGen         = makeSliceGen
