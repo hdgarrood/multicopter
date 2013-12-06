@@ -11,5 +11,6 @@ main :: IO ()
 main = do
     tvar <- newServerState' >>= newTVarIO
 
+    -- TODO: Catch MalformedRequests and handle sensibly
     void $ forkIO $ startWebSocketsApp tvar
     startScottyApp tvar
