@@ -11,7 +11,6 @@ import qualified Web.Scotty.Trans (ActionT, html)
 
 import           Server.Types
 import           Server.WebM
-import           Server.Player
 import           Server.ToMarkupInstances()
 import           Conversion()
 

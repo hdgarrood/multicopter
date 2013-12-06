@@ -1,7 +1,6 @@
 module Server.WebSocketsApp where
 
 import Data.Char
-import Data.Either
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Text (Text)
@@ -12,7 +11,6 @@ import Control.Concurrent.STM
 import Control.Concurrent (forkIO)
 
 import Server.Types
-import Server.Player
 import Game.Types
 import Server.ServerState
 import Conversion
@@ -89,6 +87,7 @@ tryAddPlayerToGame' info state = do
 -- microsecondsPerStep :: Int
 -- microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
 
+startGameThread :: TVar ServerState -> IO ()
 startGameThread = const (return ())
 -- startGameThread :: TVar ServerState -> IO ()
 -- startGameThread state = do
