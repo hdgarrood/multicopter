@@ -3,8 +3,26 @@ version:        0.0.1
 cabal-version:  >= 1.6
 build-type:     Simple
 
+test-suite multicopter-tests
+  type:             exitcode-stdio-1.0
+  main-is:          TestMain.hs
+  hs-source-dirs:   test, src/haskell
+  ghc-options:      -threaded -Wall
+  build-depends:    base,
+                    HUnit,
+                    QuickCheck,
+                    test-framework,
+                    test-framework-hunit,
+                    test-framework-quickcheck2
+  extensions:       GeneralizedNewtypeDeriving,
+                    OverloadedStrings,
+                    DeriveDataTypeable,
+                    TemplateHaskell,
+                    TypeSynonymInstances,
+                    FlexibleInstances
+
 executable multicopter
-  hs-source-dirs:   src/haskell test
+  hs-source-dirs:   src/haskell
   main-is:          Main.hs
   ghc-options:      -threaded -Wall
   build-depends:    base,
