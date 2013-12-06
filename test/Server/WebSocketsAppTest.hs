@@ -1,6 +1,6 @@
 module Server.WebSocketsAppTest where
 
-import Test.HUnit
+import Test.HUnit hiding (path)
 import qualified Data.ByteString as B
 import qualified Network.WebSockets as WS
 

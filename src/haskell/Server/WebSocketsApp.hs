@@ -59,7 +59,7 @@ getGameId = getGameId' . pathInfo . URI.decodePath . WS.requestPath
 
 getGameId' :: [Text] -> Either ByteString GameId
 getGameId' ("ws":"games":x:[]) =
-    withLeft "game not found" $ readEither (convert x)
+    withLeft "game not found" . fmap GameId . readEither $ convert x
 getGameId' _                  = Left "game not found"
 
 getAuthToken :: WS.RequestHead -> Either ByteString ByteString
