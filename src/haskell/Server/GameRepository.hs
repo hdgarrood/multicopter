@@ -1,17 +1,14 @@
 module Server.GameRepository where
 
-import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.Random
 
 import Game.Types
+import Server.Types
 import Game.Game
 
-data GameRepository = GameRepository
-    { repoNextGameId :: GameId
-    , repoStdGen     :: StdGen -- for creating Worlds
-    , repoGames      :: Map GameId Game
-    }
+noClients :: Clients
+noClients = []
 
 makeGameRepository :: Rand StdGen GameRepository
 makeGameRepository = do
@@ -30,9 +27,11 @@ addGame repo = (game, repo')
 
         repo' = repo { repoNextGameId = succ gId
                      , repoStdGen     = gen'
-                     , repoGames      = M.insert gId game (repoGames repo)
+                     , repoGames      = M.insert gId
+                                            (game, noClients)
+                                            (repoGames repo)
                      }
 
-getGameById :: GameId -> GameRepository -> Maybe Game
+getGameById :: GameId -> GameRepository -> Maybe (Game, Clients)
 getGameById gId repo =
     M.lookup gId (repoGames repo)

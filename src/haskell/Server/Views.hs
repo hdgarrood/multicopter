@@ -9,6 +9,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 import           Text.Blaze.Html.Renderer.Text
 import qualified Web.Scotty.Trans (ActionT, html)
 
+import           Server.Types
 import           Server.WebM
 import           Server.Player
 import           Server.ToMarkupInstances()

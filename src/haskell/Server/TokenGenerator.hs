@@ -7,7 +7,7 @@ import qualified Data.ByteString as B
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Char8 (singleton)
 
-newtype TokenGenerator = TokenGenerator StdGen deriving (Show)
+import Server.Types
 
 -- arbitrarily chosen
 tokenLength :: Int

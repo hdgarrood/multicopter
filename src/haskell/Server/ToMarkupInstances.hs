@@ -5,6 +5,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Text       as T
 
 import Conversion
+import Server.Types
 import Server.Player
 
 instance ToMarkup BS.ByteString where

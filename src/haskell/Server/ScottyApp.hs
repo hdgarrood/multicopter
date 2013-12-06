@@ -12,10 +12,10 @@ import Web.Cookie
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
 
-import Server.Player
+import Server.Types
+import Server.PlayerRepository
 import Server.Views
 import Server.WebM
-import Server.ServerState
 import Conversion
 
 makeCookie :: Text -> Text -> SetCookie

@@ -4,10 +4,9 @@ import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad.Reader
 
-import Server.ServerState
-import Server.GameRepository
-import Server.Player
+import Server.Types
 
+-- A type for accessing a TVar ServerState inside a Scotty action
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
     deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
 

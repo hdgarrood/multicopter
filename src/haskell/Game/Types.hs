@@ -5,7 +5,7 @@ import qualified Data.Text.Lazy as T
 import System.Random
 
 -- === GAME ===
-newtype GameId = GameId Int deriving (Eq, Ord, Show, Enum)
+newtype GameId = GameId Int deriving (Eq, Ord, Show, Enum, Read)
 
 data Game = Game
     { gameId    :: GameId
