@@ -58,7 +58,7 @@ getGameId = getGameId' . pathInfo . URI.decodePath . WS.requestPath
     where pathInfo = fst
 
 getGameId' :: [Text] -> Either ByteString GameId
-getGameId' ("ws":"games":x:_) =
+getGameId' ("ws":"games":x:[]) =
     withLeft "game not found" $ readEither (convert x)
 getGameId' _                  = Left "game not found"
 
