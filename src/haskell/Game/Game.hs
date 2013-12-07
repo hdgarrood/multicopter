@@ -1,5 +1,6 @@
 module Game.Game where
 
+import Data.Text.Lazy (Text)
 import Control.Monad.Writer
 import Control.Monad.Random
 
@@ -11,15 +12,21 @@ makeGame :: GameId -> Rand StdGen Game
 makeGame gId = do
     world <- makeWorld
     return $ Game
-        { gameId    = gId
-        , gameWorld = world
-        , gameHelis = []
-        , gameState = NotStarted
+        { gameId         = gId
+        , gameWorld      = world
+        , gameNextHeliId = HeliId 1
+        , gameHelis      = []
+        , gameState      = NotStarted
         }
 
-addHeli :: HeliId -> Game -> Game
-addHeli hId game = game { gameHelis = newHeli : gameHelis game }
-    where newHeli = makeHeli hId
+addHeli :: Game -> Text -> (HeliId, Game)
+addHeli game hName = (hId, game')
+    where
+        hId     = gameNextHeliId game
+        newHeli = makeHeli hId hName
+        game'   = game { gameHelis      = newHeli : gameHelis game
+                       , gameNextHeliId = succ hId
+                       }
 
 removeHeli :: HeliId -> Game -> Game
 removeHeli hId game = game { gameHelis = helis }

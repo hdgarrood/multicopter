@@ -1,5 +1,6 @@
 module Game.Heli where
 
+import Data.Text.Lazy (Text)
 import Control.Monad.Writer
 import Data.Maybe
 
@@ -8,9 +9,10 @@ import Game.World
 import Game.Slice
 import Game.Constants
 
-makeHeli :: HeliId -> Heli
-makeHeli hId = Heli
+makeHeli :: HeliId -> Text -> Heli
+makeHeli hId name = Heli
     { heliId        = hId
+    , heliName      = name
     , heliPosition  = 0
     , heliVelocity  = 0
     , heliDirection = Down

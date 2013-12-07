@@ -1,17 +1,21 @@
 module Game.Types where
 
 import Data.Aeson
-import qualified Data.Text.Lazy as T
+import Data.Text.Lazy (Text)
 import System.Random
 
 -- === GAME ===
 newtype GameId = GameId Int deriving (Eq, Ord, Show, Enum)
 
+unGameId :: GameId -> Int
+unGameId (GameId x) = x
+
 data Game = Game
-    { gameId    :: GameId
-    , gameWorld :: World
-    , gameHelis :: [Heli]
-    , gameState :: GameState
+    { gameId         :: GameId
+    , gameWorld      :: World
+    , gameNextHeliId :: HeliId
+    , gameHelis      :: [Heli]
+    , gameState      :: GameState
     }
 
 data GameState = NotStarted
@@ -51,11 +55,11 @@ data WorldChange = SliceAdded Slice -- A slice was added
 
 instance ToJSON WorldChange where
     toJSON (SliceAdded slice) =
-        object [ "type" .= ("sliceAdded"  :: T.Text)
+        object [ "type" .= ("sliceAdded"  :: Text)
                , "data" .= slice
                ]
     toJSON (SlicesMoved dist) =
-        object [ "type" .= ("slicesMoved" :: T.Text)
+        object [ "type" .= ("slicesMoved" :: Text)
                , "data" .= dist
                ]
 
@@ -74,6 +78,7 @@ data Direction = Down | Up
 
 data Heli = Heli
     { heliId        :: HeliId
+    , heliName      :: Text
     , heliPosition  :: Position
     , heliVelocity  :: Velocity
     , heliDirection :: Direction

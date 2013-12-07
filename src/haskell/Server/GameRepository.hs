@@ -14,7 +14,7 @@ makeGameRepository :: Rand StdGen GameRepository
 makeGameRepository = do
     gen <- getSplit
     return $
-        GameRepository { repoNextGameId = GameId 0
+        GameRepository { repoNextGameId = GameId 1
                        , repoStdGen     = gen
                        , repoGames      = M.empty
                        }
@@ -35,3 +35,13 @@ addGame repo = (game, repo')
 getGameById :: GameId -> GameRepository -> Maybe (Game, Clients)
 getGameById gId repo =
     M.lookup gId (repoGames repo)
+
+modifyGame :: GameId ->
+              (Game, Clients) ->
+              GameRepository ->
+              Maybe GameRepository
+modifyGame gameKey gameVal repo =
+    if M.member gameKey (repoGames repo)
+        then let games = M.insert gameKey gameVal (repoGames repo)
+             in  Just $ repo { repoGames = games }
+        else Nothing

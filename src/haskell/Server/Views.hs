@@ -1,53 +1,64 @@
 module Server.Views where
 
-import           Prelude hiding (div)
+import           Prelude hiding (div, head, id)
 import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as T
 import           Data.Text.Format as TF
-import           Text.Blaze.Html5
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
-import           Text.Blaze.Html.Renderer.Text
-import qualified Web.Scotty.Trans (ActionT, html)
+import           Text.Blaze.Html5 hiding (style)
+import           Text.Blaze.Html5.Attributes hiding (form, label, content)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
+import           Web.Scotty.Trans (ActionT)
+import qualified Web.Scotty.Trans as Scotty
 
+import           Server.View
+import           Server.Routing
 import           Server.Types
+import           Game.Types
 import           Server.WebM
 import           Server.ToMarkupInstances()
 import           Conversion()
 
-withinMainLayout :: Html -> Html
-withinMainLayout content = docTypeHtml $ do
-    H.head $ do
-        meta ! A.charset "utf-8"
-    body $ do
-        h1 "multicopter"
-        content
-        H.div ! A.id "alert" ! A.style "display: none;" $ do
-            H.div ! A.id "alert-heading" $ ""
-            H.div ! A.id "alert-details" $ ""
+-- Rendering
+render :: View -> ActionT WebM ()
+render = renderWithLayout defaultLayout
 
-render :: Html -> Web.Scotty.Trans.ActionT WebM ()
-render = Web.Scotty.Trans.html . renderHtml . withinMainLayout
+renderWithLayout :: Layout -> View -> ActionT WebM ()
+renderWithLayout l v = Scotty.html $ renderHtml $ renderView l v
 
-loginNotice :: Text -> Html
-loginNotice name = div $ do
-    toMarkup $ (TF.format "hooray! you're logged in as {}. " (Only name))
-    a ! A.href "/registered-players" $ "registered players"
+defaultLayout :: Layout
+defaultLayout headContent content =
+    docTypeHtml $ do
+        head $ do
+            meta ! charset "utf-8"
+            headContent
+        body $ do
+            h1 "multicopter"
+            content
+            div ! id "alert" ! style "display: none;" $ do
+                div ! id "alert-heading" $ ""
+                div ! id "alert-details" $ ""
 
-registrationForm :: Html
-registrationForm =
-    form ! A.action "/register" ! A.method "post" $ do
-        input ! A.type_ "hidden" ! A.name "back_path" ! A.value "/"
-        label ! A.for "name" $ "Your name:"
-        input ! A.type_ "text" ! A.name "name" ! A.autofocus "autofocus"
-        input ! A.type_ "submit" ! A.value "Submit"
+loginNotice :: Text -> View
+loginNotice pName = view $
+    div $ do
+        toMarkup $ TF.format "hooray! you're logged in as {}. " (Only pName)
+        a ! href "/registered-players" $ "registered players"
 
-registrationFormWithError :: Text -> Html
-registrationFormWithError err = do
-    div ! A.class_ "error" $ toMarkup err
-    registrationForm
+registrationForm :: View
+registrationForm = view $
+    form ! action "/register" ! method "post" $ do
+        input ! type_ "hidden" ! name "back_path" ! value "/"
+        label ! for "name" $ "Your name:"
+        input ! type_ "text" ! name "name" ! autofocus "autofocus"
+        input ! type_ "submit" ! value "Submit"
 
-registeredPlayers :: [Player] -> Html
-registeredPlayers players = do
+registrationFormWithError :: Text -> View
+registrationFormWithError err = view $ do
+    div ! class_ "error" $ toMarkup err
+    renderPartial registrationForm
+
+registeredPlayers :: [Player] -> View
+registeredPlayers players = view $ do
     h2 "Registered players:"
     table $ do
         thead $ do
@@ -63,3 +74,27 @@ registeredPlayers players = do
     where
         td' :: ToMarkup a => a -> Html
         td' = td . toHtml
+
+gameNotFound :: View
+gameNotFound = view $ do
+    h2 "Game not found. soz lol"
+
+startGame :: Game -> View
+startGame game = viewWithHead headContent bodyContent
+    where
+        headContent = script ! type_ "text/javascript" $ toMarkup js
+        js = T.unlines $
+                [ "$(document).ready(function() {"
+                , "  var websocket_url = ["
+                , "    'ws://',"
+                , "    window.location.host,"
+                , TF.format "'{}'," (Only (pathForGame game))
+                , "    '?auth_token=',"
+                , "    $.cookie('auth_token'),"
+                , "  ].join('')"
+                , "  startGame(websocket_url)"
+                , "})"
+                ]
+        bodyContent = do
+            button ! id "start-game" $ "Start the game"
+            div ! id "canvas-container" $ ""

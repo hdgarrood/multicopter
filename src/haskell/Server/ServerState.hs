@@ -1,13 +1,16 @@
 module Server.ServerState where
 
-import Data.Text.Lazy (Text)
+import Control.Exception (assert)
 import Control.Monad.Random
 import Control.Concurrent.STM
+import Data.Maybe (isJust, fromJust)
+import Data.Text.Lazy (Text)
 import qualified Network.WebSockets as WS
 
 import Server.GameRepository
 import Server.PlayerRepository
 import Server.Types
+import Game.Game
 
 newServerState :: Rand StdGen ServerState
 newServerState = do
@@ -27,7 +30,27 @@ makeGameJoinInfo info conn = (fst info, snd info, conn)
 
 -- TODO
 tryAddPlayerToGame :: GameJoinInfo -> ServerState -> Either Text ServerState
-tryAddPlayerToGame _ _ = Left "game not found"
+tryAddPlayerToGame (gId, tok, conn) state = do
+    player <- fromMaybe "auth unsuccessful" $
+                getPlayerBy (Token tok) (serverPlayers state)
+
+    (game, clients) <- fromMaybe "game not found" $
+                        getGameById gId (serverGames state)
+
+    return $ go (player, game, clients)
+
+    where
+        fromMaybe _   (Just x) = Right x
+        fromMaybe msg Nothing  = Left msg
+
+        go (player, game, clients) =
+            let (hId, game') = addHeli game (playerName player)
+                client       = (conn, hId)
+                games_       = modifyGame gId
+                                    (game', client : clients)
+                                    (serverGames state)
+                games'       = fromJust $ assert (isJust games_) games_
+            in  state { serverGames = games' }
 
 tryAddPlayerToGameSTM :: GameJoinInfo ->
                          TVar ServerState ->

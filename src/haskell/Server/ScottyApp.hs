@@ -13,9 +13,12 @@ import Data.Text.Lazy
 import qualified Data.ByteString as BS
 
 import Server.Types
+import Game.Types
 import Server.PlayerRepository
+import Server.GameRepository
 import Server.Views
 import Server.WebM
+import Server.Routing
 import Conversion
 
 makeCookie :: Text -> Text -> SetCookie
@@ -106,3 +109,15 @@ startScottyApp tvar =
         get "/registered-players" $ do
             players <- webM $ gets (getAllPlayers . serverPlayers)
             render (registeredPlayers players)
+
+        get "/games/:id" $ do
+            gId  <- fmap GameId $ param "id"
+            game <- webM $ gets (getGameById gId . serverGames)
+            case game of
+                Just (x,_) -> render $ startGame x
+                Nothing    -> do status notFound404
+                                 render gameNotFound
+
+        post "/games" $ do
+            game <- webM $ modifyGamesWith addGame
+            redirect (pathForGame game)
