@@ -3,7 +3,6 @@ module Server.FileEmbedMiddleware where
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Map as M
-import Data.Text.Encoding (encodeUtf8)
 import Data.Conduit (ResourceT)
 import System.FilePath
 
@@ -31,14 +30,14 @@ getEmbeddedFile ::
     [(FilePath, B.ByteString)] ->
     [T.Text] ->
     Maybe (B.ByteString, B.ByteString)
-getEmbeddedFile embeddedFiles pathInfo = do
-    contents <- getEmbedPath pathInfo >>= (\p -> lookup p embeddedFiles)
-    let mimeType = getMime $ T.unpack $ last pathInfo
+getEmbeddedFile embeddedFiles path = do
+    contents <- getEmbedPath path >>= (\p -> lookup p embeddedFiles)
+    let mimeType = getMime $ T.unpack $ last path
     return (contents, mimeType)
 
 getEmbedPath :: [T.Text] -> Maybe String
-getEmbedPath pathInfo =
-    case pathInfo of
+getEmbedPath path =
+    case path of
         "static":xs -> Just $ T.unpack $ T.intercalate "/" xs
         _           -> Nothing
 

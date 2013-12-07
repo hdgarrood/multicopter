@@ -1,18 +1,18 @@
 module Server.ScottyApp where
 
-import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad (join)
 import Data.Maybe
-
-import Network.Wai
-import Network.HTTP.Types
-import Web.Cookie
-
+import Data.FileEmbed
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
+import Web.Scotty.Trans
+import Web.Cookie
+import Network.Wai
+import Network.HTTP.Types
 
 import Server.Types
+import Server.FileEmbedMiddleware
 import Game.Types
 import Server.PlayerRepository
 import Server.GameRepository
@@ -96,6 +96,8 @@ beforehand = matchAny (function
 startScottyApp :: TVar ServerState -> IO ()
 startScottyApp tvar =
     scottyWebM 3000 tvar $ do
+        middleware $ fileEmbed $(embedDir "src/static")
+
         beforehand ensureAuthenticated
 
         get "/register" $ do
