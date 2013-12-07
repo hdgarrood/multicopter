@@ -104,7 +104,7 @@ startGame game = viewWithHead headContent bodyContent
                 , "  var websocket_url = ["
                 , "    'ws://',"
                 , "    window.location.host,"
-                , TF.format "'{}'," (Only (pathForGame game))
+                , TF.format "'{}'," (Only (wsPathForGame game))
                 , "    '?auth_token=',"
                 , "    $.cookie('auth_token'),"
                 , "  ].join('')"

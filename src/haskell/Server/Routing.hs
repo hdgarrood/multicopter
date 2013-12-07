@@ -10,3 +10,6 @@ import Game.Types
 -- I don't have to do extra work to get it to go in both directions.
 pathForGame :: Game -> Text
 pathForGame game = TF.format "/games/{}" (TF.Only $ unGameId $ gameId game)
+
+wsPathForGame :: Game -> Text
+wsPathForGame = ("/ws" `T.append`) . pathForGame
