@@ -36,6 +36,12 @@ getGameById :: GameId -> GameRepository -> Maybe (Game, Clients)
 getGameById gId repo =
     M.lookup gId (repoGames repo)
 
+getAllGames :: GameRepository -> [(Game, Clients)]
+getAllGames = M.elems . repoGames
+
+getAllGames' :: GameRepository -> [Game]
+getAllGames' = map fst . getAllGames
+
 modifyGame :: GameId ->
               (Game, Clients) ->
               GameRepository ->

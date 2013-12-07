@@ -1,6 +1,7 @@
 module Server.Views where
 
 import           Prelude hiding (div, head, id)
+import           Control.Monad
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Format as TF
@@ -38,11 +39,26 @@ defaultLayout headContent content =
                 div ! id "alert-heading" $ ""
                 div ! id "alert-details" $ ""
 
-loginNotice :: Text -> View
-loginNotice pName = view $
+homePage :: Text -> [Game] -> View
+homePage pName games = view $ do
     div $ do
         toMarkup $ TF.format "hooray! you're logged in as {}. " (Only pName)
         a ! href "/registered-players" $ "registered players"
+    renderPartial createGameButton
+    renderPartial (gameList games)
+
+createGameButton :: View
+createGameButton = view $
+    form ! action "/games" ! method "post" $ do
+        input ! type_ "submit" ! value "Start a new game"
+
+gameList :: [Game] -> View
+gameList games = view $ do
+    h2 "games"
+    ul $ do
+        forM_ games $ \game ->
+            li $
+                a ! href (toValue $ pathForGame game) $ toMarkup game
 
 registrationForm :: View
 registrationForm = view $

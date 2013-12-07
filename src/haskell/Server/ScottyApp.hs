@@ -106,7 +106,8 @@ startScottyApp tvar =
 
         get "/" $ do
             player <- getCurrentPlayer'
-            render $ loginNotice (playerName player)
+            games  <- webM $ gets (getAllGames' . serverGames)
+            render $ homePage (playerName player) games
 
         get "/registered-players" $ do
             players <- webM $ gets (getAllPlayers . serverPlayers)
