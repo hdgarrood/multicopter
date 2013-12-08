@@ -1,16 +1,13 @@
 module Server.WebM where
 
+import Data.Text.Lazy (Text)
 import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad.Reader
 
 import Server.Types
 
--- A type for accessing a TVar ServerState inside a Scotty action
-newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
-    deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
-
-scottyWebM :: Int -> TVar ServerState -> ScottyT WebM () -> IO ()
+scottyWebM :: Int -> TVar ServerState -> ScottyT Text WebM () -> IO ()
 scottyWebM port tvar app =
     scottyT port runM runActionToIO app
     where

@@ -1,5 +1,7 @@
 module Server.Types where
 
+import Control.Monad.Reader
+import Control.Concurrent.STM
 import qualified Network.WebSockets as WS
 import Data.ByteString (ByteString)
 import Data.Text.Lazy (Text)
@@ -7,8 +9,18 @@ import Data.Map (Map)
 import System.Random
 import Data.IxSet
 import Data.Data (Data, Typeable)
+import Web.Scotty.Trans
 
 import Game.Types
+
+-- Scotty things
+-- A type for accessing a TVar ServerState inside a Scotty action
+newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
+    deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
+
+-- Handy aliases
+type Scotty' = ScottyT Text WebM
+type Action' = ActionT Text WebM
 
 -- a GameInfo is a game id and an auth token
 type GameInfo = (GameId, ByteString)

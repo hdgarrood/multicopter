@@ -20,10 +20,10 @@ import           Server.ToMarkupInstances()
 import           Conversion()
 
 -- Rendering
-render :: View -> ActionT WebM ()
+render :: View -> Action' ()
 render = renderWithLayout defaultLayout
 
-renderWithLayout :: Layout -> View -> ActionT WebM ()
+renderWithLayout :: Layout -> View -> ActionT Text WebM ()
 renderWithLayout l v = Scotty.html $ renderHtml $ renderView l v
 
 defaultLayout :: Layout

@@ -16,10 +16,10 @@ fileEmbed embeddedFiles app req =
         Just x  -> respond x
         Nothing -> app req
 
-respond :: (B.ByteString, B.ByteString) -> ResourceT IO Response
+respond :: (B.ByteString, B.ByteString) -> IO Response
 respond (contents, mimeType) =
     return $
-        ResponseBuilder
+        responseBuilder
             status200
             [("Content-Type", mimeType)] 
             (fromByteString contents)

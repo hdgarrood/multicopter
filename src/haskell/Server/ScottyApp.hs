@@ -30,21 +30,21 @@ makeCookie n v = def { setCookieName = n', setCookieValue = v' }
 renderSetCookie' :: SetCookie -> Text
 renderSetCookie' = convert . renderSetCookie
 
-setCookie :: Text -> Text -> ActionT WebM ()
+setCookie :: Text -> Text -> Action' ()
 setCookie n v = setHeader "Set-Cookie" (renderSetCookie' (makeCookie n v))
 
-ensureAuthenticated :: ActionT WebM ()
+ensureAuthenticated :: Action' ()
 ensureAuthenticated = do
     authed <- isAuthenticated
     if authed
         then next
         else do
-            path <- param "path" :: ActionT WebM Text
+            path <- param "path" :: Action' Text
             case path of
                 "/register" -> handleRegistration
                 _           -> redirect "/register"
 
-getAuthToken :: ActionT WebM (Maybe BS.ByteString)
+getAuthToken :: Action' (Maybe BS.ByteString)
 getAuthToken = do
     cookieHeader <- reqHeader "Cookie"
     return $ extract cookieHeader
@@ -52,7 +52,7 @@ getAuthToken = do
         extract :: Maybe Text -> Maybe BS.ByteString
         extract = join . fmap (lookup "auth_token" . parseCookies . convert)
 
-getCurrentPlayer :: ActionT WebM (Maybe Player)
+getCurrentPlayer :: Action' (Maybe Player)
 getCurrentPlayer = do
     maybeToken <- getAuthToken
     case maybeToken of
@@ -61,15 +61,15 @@ getCurrentPlayer = do
 
 -- The call to 'fromJust' is mostly acceptable because any code that calls this
 -- will only be executed after we've checked that someone's logged in.
-getCurrentPlayer' :: ActionT WebM Player
+getCurrentPlayer' :: Action' Player
 getCurrentPlayer' = fmap fromJust getCurrentPlayer
 
 -- TODO: Retrieve the player associated with an auth token once per request and
 -- save the result somewhere.
-isAuthenticated :: ActionT WebM Bool
+isAuthenticated :: Action' Bool
 isAuthenticated = fmap isJust getCurrentPlayer
 
-handleRegistration :: ActionT WebM ()
+handleRegistration :: Action' ()
 handleRegistration = do
     req <- request
     case requestMethod req of
@@ -87,9 +87,9 @@ handleRegistration = do
                     redirect "/"
 
 -- Specify something that should always happen before each request. The given
--- ActionT WebM() should probably contain a 'next' so that the rest of the
+-- Action'() should probably contain a 'next' so that the rest of the
 -- application can be reached.
-beforehand :: ActionT WebM () -> ScottyT WebM ()
+beforehand :: Action' () -> Scotty' ()
 beforehand = matchAny (function
     (\req -> Just [("path", convert $ rawPathInfo req)]))
 
