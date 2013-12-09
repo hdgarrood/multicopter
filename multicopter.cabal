@@ -25,32 +25,37 @@ executable multicopter
   hs-source-dirs:   src/haskell
   main-is:          Main.hs
   ghc-options:      -threaded -Wall
+
+                    -- stuff i definitely need
   build-depends:    base,
                     data-default,
                     random,
                     bytestring,
-                    containers,
                     MonadRandom,
-                    mtl,
                     stm,
                     transformers,
                     text,
                     text-format,
-                    filepath,
-                    conduit,
-                    blaze-builder,
                     blaze-html,
-                    directory,
                     http-types,
                     scotty >= 0.6.0 && < 0.7,
+                    scotty-fay-server,
                     aeson,
                     wai,
-                    wai-extra,
-                    wai-middleware-static,
                     cookie,
                     websockets,
                     file-embed,
-                    ixset
+                    ixset,
+                    -- stuff I might not be using
+                    mtl,
+                    wai-extra,
+                    wai-middleware-static,
+                    filepath,
+                    conduit,
+                    blaze-builder,
+                    directory,
+                    containers
+
   extensions:       GeneralizedNewtypeDeriving,
                     OverloadedStrings,
                     DeriveDataTypeable,

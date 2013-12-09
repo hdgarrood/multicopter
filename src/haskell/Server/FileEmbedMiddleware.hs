@@ -3,7 +3,6 @@ module Server.FileEmbedMiddleware where
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Map as M
-import Data.Conduit (ResourceT)
 import System.FilePath
 
 import Network.Wai

@@ -7,6 +7,7 @@ import Data.FileEmbed
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
 import Web.Scotty.Trans
+import Web.Scotty.FayServer
 import Web.Cookie
 import Network.Wai
 import Network.HTTP.Types
@@ -97,6 +98,7 @@ startScottyApp :: TVar ServerState -> IO ()
 startScottyApp tvar =
     scottyWebM 3000 tvar $ do
         middleware $ fileEmbed $(embedDir "src/static")
+        serveFay
 
         beforehand ensureAuthenticated
 
