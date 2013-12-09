@@ -34,8 +34,11 @@ executable multicopter
                     MonadRandom,
                     stm,
                     transformers,
+                    containers,
+                    mtl,
                     text,
                     text-format,
+                    blaze-builder,
                     blaze-html,
                     http-types,
                     scotty >= 0.6.0 && < 0.7,
@@ -48,15 +51,8 @@ executable multicopter
                     websockets,
                     file-embed,
                     ixset,
+                    filepath
                     -- stuff I might not be using
-                    mtl,
-                    wai-extra,
-                    wai-middleware-static,
-                    filepath,
-                    conduit,
-                    blaze-builder,
-                    directory,
-                    containers
 
   extensions:       GeneralizedNewtypeDeriving,
                     OverloadedStrings,
