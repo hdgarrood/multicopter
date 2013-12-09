@@ -52,7 +52,6 @@ executable multicopter
                     file-embed,
                     ixset,
                     filepath
-                    -- stuff I might not be using
 
   extensions:       GeneralizedNewtypeDeriving,
                     OverloadedStrings,
