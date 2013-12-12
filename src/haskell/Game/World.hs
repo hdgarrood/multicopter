@@ -4,6 +4,7 @@ import System.Random
 import Control.Monad.Random
 import Control.Monad.Writer
 
+import Game.Constants
 import Game.Types
 import Game.Slice
 import Game.Geometry
@@ -15,26 +16,6 @@ withinRect v r =
     (vectX v) < (rectX r + rectW r) &&
     (vectY v) > (rectY r) &&
     (vectY v) < (rectY r + rectW r)
-
--- how many slices can fit into a world at once
-maxSlicesInWorld :: Int
-maxSlicesInWorld = 28
-
--- how wide is a slice
-sliceWidth :: Int
-sliceWidth = 30
-
--- how wide is the whole world
--- Subtract one because two slices will always be only partially visible
-worldWidth :: Int
-worldWidth = (maxSlicesInWorld - 1) * sliceWidth
-
-startingVelocity :: Double
-startingVelocity = 5
-
--- The amount the world speeds up per step
-worldAcceleration :: Double
-worldAcceleration = 0.001
 
 makeWorld :: Rand StdGen World
 makeWorld = do
