@@ -3,7 +3,6 @@ module Server.Views where
 import           Prelude hiding (div, head, id)
 import           Control.Monad
 import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as T
 import           Data.Text.Format as TF
 import           Text.Blaze.Html5 hiding (style)
 import           Text.Blaze.Html5.Attributes hiding (form, label, content)
@@ -97,19 +96,13 @@ gameNotFound = view $ do
 startGame :: Game -> View
 startGame game = viewWithHead headContent bodyContent
     where
-        headContent = script ! type_ "text/javascript" $ toMarkup js
-        js = T.unlines $
-                [ "$(document).ready(function() {"
-                , "  var websocket_url = ["
-                , "    'ws://',"
-                , "    window.location.host,"
-                , TF.format "'{}'," (Only (wsPathForGame game))
-                , "    '?auth_token=',"
-                , "    $.cookie('auth_token'),"
-                , "  ].join('')"
-                , "  startGame(websocket_url)"
-                , "})"
-                ]
+        headContent =
+            script ! type_ "text/javascript" ! src "/fay/Main.hs" $ ""
+
         bodyContent = do
             button ! id "start-game" $ "Start the game"
-            div ! id "canvas-container" $ ""
+            div !
+                id "canvas-container" !
+                dataAttribute "websocket-path" webSocketPath $ ""
+
+        webSocketPath = toValue . wsPathForGame $ game
