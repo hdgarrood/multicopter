@@ -61,6 +61,16 @@ data Player = Player
     }
     deriving (Data, Typeable, Show, Eq, Ord)
 
+unPlayerId :: PlayerId -> Int
+unPlayerId (PlayerId x) = x
+
+instance Indexable Player where
+    empty = ixSet
+                [ ixFun $ \p -> [ playerId p ]
+                , ixFun $ \p -> [ Name $ playerName p ]
+                , ixFun $ \p -> [ Token $ playerToken p ]
+                ]
+
 newtype PlayerId = PlayerId Int     deriving (Eq, Show, Ord, Data, Typeable, Enum)
 newtype Name     = Name Text        deriving (Eq, Show, Ord, Data, Typeable)
 newtype Token    = Token ByteString deriving (Eq, Show, Ord, Data, Typeable)

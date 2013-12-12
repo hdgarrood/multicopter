@@ -7,7 +7,6 @@ import Data.Maybe (isJust)
 import Control.Monad.Random
 
 import Server.Types
-import Server.Player()
 import Server.TokenGenerator
 
 makePlayerRepository :: Rand StdGen PlayerRepository
