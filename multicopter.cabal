@@ -6,7 +6,7 @@ build-type:     Simple
 test-suite multicopter-tests
   type:             exitcode-stdio-1.0
   main-is:          TestMain.hs
-  hs-source-dirs:   test, src/haskell
+  hs-source-dirs:   test src/haskell src/shared
   ghc-options:      -threaded -Wall
   build-depends:    base,
                     HUnit,
@@ -22,11 +22,9 @@ test-suite multicopter-tests
                     FlexibleInstances
 
 executable multicopter
-  hs-source-dirs:   src/haskell
+  hs-source-dirs:   src/haskell src/shared
   main-is:          Main.hs
   ghc-options:      -threaded -Wall
-
-                    -- stuff i definitely need
   build-depends:    base,
                     data-default,
                     random,

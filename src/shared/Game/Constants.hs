@@ -1,5 +1,8 @@
 module Game.Constants where
 
+-- for Fay
+import Prelude
+
 heliXPosition :: Int
 heliXPosition = 50
 
