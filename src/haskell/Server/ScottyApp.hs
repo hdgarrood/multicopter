@@ -98,7 +98,12 @@ startScottyApp :: TVar ServerState -> IO ()
 startScottyApp tvar =
     scottyWebM 3000 tvar $ do
         middleware $ fileEmbed $(embedDir "src/static")
-        serveFay (under "/fay" . fromDirs ["src/fay", "src/shared"])
+
+        serveFay $
+            ( under "/fay"
+            . fromDirs ["src/fay", "src/shared"]
+            . withPackages ["fay-text", "fay-jquery"]
+            )
 
         beforehand ensureAuthenticated
 

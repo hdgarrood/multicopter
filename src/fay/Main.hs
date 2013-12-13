@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Prelude
+import Fay.Text (Text)
+import qualified Fay.Text as T
+import JQuery
 import FFI
 
 import Game.Constants
@@ -21,13 +25,32 @@ initialWorld = World
     , worldOffset = 0
     }
 
-getLocationHost :: Fay String
-getLocationHost = ffi "window.location.host"
+getHostname :: Fay Text
+getHostname = ffi "window.location.host"
 
-constructWebsocketUrl :: String -> String -> Fay String
-constructWebsocketUrl path authToken = do
-    hostname <- getLocationHost
-    return $ concat $
+getWebSocketPath :: Fay Text
+getWebSocketPath = do
+    elem <- select ("#canvas-container" :: Text)
+    getAttr "data-websocket-path" elem
+
+getCookieUnparsed :: Fay Text
+getCookieUnparsed = ffi "document.cookie"
+
+type Cookies = [(Text, Text)]
+
+getCookie :: Fay (Maybe Cookies)
+getCookie = do
+    cookie <- getCookieUnparsed
+    return $ parseCookie cookie
+
+parseCookie :: Text -> Maybe Cookies
+parseCookie _ = Nothing
+
+constructWebSocketUrl :: Text -> Fay Text
+constructWebSocketUrl authToken = do
+    hostname <- getHostname
+    path <- getWebSocketPath
+    return $ T.concat $
         [ "ws://"
         , hostname
         , path
@@ -35,16 +58,10 @@ constructWebsocketUrl path authToken = do
         , authToken
         ]
 
-main :: Fay ()
-main = return ()
+alert :: Text -> Fay ()
+alert = ffi "window.alert(%1)"
 
--- $(document).ready(function() {"
---   var websocket_url = ["
---     'ws://',"
---     window.location.host,"
--- F.format "'{}'," (Only (wsPathForGame game))
---     '?auth_token=',"
---     $.cookie('auth_token'),"
---   ].join('')"
---   startGame(websocket_url)"
--- })"
+main :: Fay ()
+main = do
+    url <- constructWebSocketUrl "lolwut"
+    alert url
