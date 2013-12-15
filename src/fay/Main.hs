@@ -7,6 +7,7 @@ import qualified Fay.Text as T
 import JQuery
 import FFI
 
+import qualified Websocket as W
 import Game.Constants
 
 type Slice = [Int]
@@ -16,7 +17,7 @@ emptySlice = [0]
 
 data World = World
     { worldSlices :: [Slice]
-    , worldOffset :: Double 
+    , worldOffset :: Double
     }
 
 initialWorld :: World
@@ -63,5 +64,5 @@ alert = ffi "window.alert(%1)"
 
 main :: Fay ()
 main = do
-    url <- constructWebSocketUrl "lolwut"
-    alert url
+    ws <- W.open "ws://echo.websocket.org" W.debugCallbacks
+    W.send ws "hello"

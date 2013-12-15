@@ -29,6 +29,7 @@ defaultLayout headContent content =
     docTypeHtml $ do
         head $ do
             meta ! charset "utf-8"
+            scriptTag "/static/jquery-1.10.2.js"
             headContent
         body $ do
             h1 "multicopter"
@@ -96,8 +97,8 @@ gameNotFound = view $ do
 startGame :: Game -> View
 startGame game = viewWithHead headContent bodyContent
     where
-        headContent =
-            script ! type_ "text/javascript" ! src "/fay/Main.hs" $ ""
+        headContent = do
+            scriptTag "/fay/Main.hs"
 
         bodyContent = do
             button ! id "start-game" $ "Start the game"
@@ -106,3 +107,6 @@ startGame game = viewWithHead headContent bodyContent
                 dataAttribute "websocket-path" webSocketPath $ ""
 
         webSocketPath = toValue . wsPathForGame $ game
+
+scriptTag :: AttributeValue -> Html
+scriptTag val = script ! type_ "text/javascript" ! src val $ ""
