@@ -4,14 +4,18 @@ import Data.Char
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.Text (Text)
+import Data.Aeson
 import qualified Network.WebSockets as WS
 import qualified Network.HTTP.Types.URI as URI
 import Control.Monad
+import Control.Monad.Writer
 import Control.Concurrent.STM
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkIO, threadDelay)
 
 import Server.Types
+import Server.GameRepository
 import Game.Types
+import Game.Game
 import Server.ServerState
 import Conversion
 
@@ -81,24 +85,39 @@ tryAddPlayerToGame' info state = do
         Left err -> let (_, _, conn) = info
                     in WS.sendClose conn err
 
--- stepsPerSecond :: Int
--- stepsPerSecond = 60
+stepsPerSecond :: Int
+stepsPerSecond = 60
 
--- microsecondsPerStep :: Int
--- microsecondsPerStep = floor (1000000.0 / fromIntegral stepsPerSecond)
+microsecondsPerStep :: Int
+microsecondsPerStep = floor (oneMillion / fromIntegral stepsPerSecond)
+    where
+        oneMillion :: Double
+        oneMillion = (10 :: Double) ^ (6 :: Int)
 
+broadcast :: WS.WebSocketsData a => Clients -> a -> IO ()
+broadcast cs msg = forM_ cs $ flip WS.sendTextData msg . fst
+
+-- TODO put each running game's data in a separate TVar so that other parts of
+-- the app will not affect it.
 startGameThread :: TVar ServerState -> IO ()
-startGameThread = const (return ())
--- startGameThread :: TVar ServerState -> IO ()
--- startGameThread state = do
---     forever $ do
---         atomically $ do
---             (world, pubSub)       <- readTVar state
---             let (world', changes) =  runWriter $ iterateWorld world
---             writeTVar state (world', pubSub)
+startGameThread state = do
+    forever $ do
+        updateActions <- atomically $ do
+            games <- fmap (getAllGames . serverGames) $ readTVar state
+            results <- forM games $ \(game, clients) -> do
+                let (game', changes) = runWriter $ stepGame game InputData
+                let message = encode changes
+                let update = broadcast clients message
+                return ((game', clients), update)
 
---         threadDelay microsecondsPerStep
+            let games'        = map fst results
+            let updateActions = map snd results
 
---         let message     = encode changes
---         B.putStrLn $ "sending " `B.append` message
---         WS.publish pubSub $ WS.textData $ decodeUtf8 message
+            modifyTVar state $ \s ->
+                s { serverGames = reconstructGames games' (serverGames s) }
+
+            return updateActions
+
+        threadDelay microsecondsPerStep
+        sequence_ updateActions
+

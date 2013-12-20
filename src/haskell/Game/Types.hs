@@ -28,6 +28,21 @@ data GameChange = GameStarted
                 | WC WorldChange
                 | HC HeliChange
 
+instance ToJSON GameChange where
+    toJSON GameStarted = object [ "type" .= ("GameStarted" :: Text)
+                                ]
+
+    toJSON GameFinished = object [ "type" .= ("GameFinished" :: Text)
+                                 ]
+
+    toJSON (WC wc) = object [ "type" .= ("WorldChange" :: Text)
+                            , "data" .= toJSON wc
+                            ]
+
+    toJSON (HC hc) = object [ "type" .= ("HeliChange" :: Text)
+                            , "data" .= toJSON hc
+                            ]
+
 type GameChanges = [GameChange]
 
 class ToGameChanges a where
@@ -109,6 +124,16 @@ type HeliInputData = [HeliSignal]
 -- is sent back as a HeliChange.
 data HeliChange = HeliMoved Int
                 | HeliCrashed
+
+instance ToJSON HeliChange where
+    toJSON (HeliMoved x) =
+        object [ "type" .= ("HeliMoved" :: Text)
+               , "data" .= x
+               ]
+
+    toJSON HeliCrashed =
+        object [ "type" .= ("HeliCrashed" :: Text)
+               ]
 
 -- TODO: less naive implementation?
 type HeliChanges = [HeliChange]

@@ -51,3 +51,10 @@ modifyGame gameKey gameVal repo =
         then let games = M.insert gameKey gameVal (repoGames repo)
              in  Just $ repo { repoGames = games }
         else Nothing
+
+reconstructGames :: [(Game, Clients)] -> GameRepository -> GameRepository
+reconstructGames games repo =
+    repo { repoGames = makeGameMap games }
+    where
+        makeGameMap = foldr add M.empty
+        add (g, cs) = M.insert (gameId g) (g, cs)
