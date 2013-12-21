@@ -5,7 +5,7 @@ import           Control.Monad
 import           Data.Text.Lazy (Text)
 import           Data.Text.Format as TF
 import           Text.Blaze.Html5 hiding (style)
-import           Text.Blaze.Html5.Attributes hiding (form, label, content)
+import           Text.Blaze.Html5.Attributes hiding (form, label, content, title)
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           Web.Scotty.Trans (ActionT)
 import qualified Web.Scotty.Trans as Scotty
@@ -30,6 +30,7 @@ defaultLayout headContent content =
         head $ do
             meta ! charset "utf-8"
             scriptTag "/static/jquery-1.10.2.js"
+            title "multicopter"
             headContent
         body $ do
             h1 "multicopter"
