@@ -45,10 +45,10 @@ callbackFor "close"   = onClose
 callbackFor _         = const Nothing
 
 createWebSocket :: Text -> Fay WebSocket
-createWebSocket = ffi "new WebSocket(%1)"
+createWebSocket = ffi "new WebSocket(%1.join(''))"
 
 addEventListener :: WebSocket -> Text -> Callback -> Fay ()
-addEventListener = ffi "%1.addEventListener(%2, %3)"
+addEventListener = ffi "%1.addEventListener(%2.join(''), %3)"
 
 whenJust :: Maybe a -> (a -> Fay ()) -> Fay ()
 whenJust (Just a) f = f a
@@ -63,4 +63,4 @@ open url callbacks = do
     return websocket
 
 send :: WebSocket -> Text -> Fay ()
-send = ffi "%1.send(%2)"
+send = ffi "%1.send(%2.join(''))"

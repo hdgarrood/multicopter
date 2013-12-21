@@ -65,4 +65,4 @@ alert = ffi "window.alert(%1)"
 main :: Fay ()
 main = do
     ws <- W.open "ws://echo.websocket.org" W.debugCallbacks
-    W.send ws "hello"
+    W.addEventListener ws "open" $ (\_ -> W.send ws "hello")
