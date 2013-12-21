@@ -11,6 +11,7 @@ import Server.GameRepository
 import Server.PlayerRepository
 import Server.Types
 import Game.Game
+import EitherUtils
 
 newServerState :: Rand StdGen ServerState
 newServerState = do
@@ -28,7 +29,6 @@ newServerState' = do
 makeGameJoinInfo :: GameInfo -> WS.Connection -> GameJoinInfo
 makeGameJoinInfo info conn = (fst info, snd info, conn)
 
--- TODO
 tryAddPlayerToGame :: GameJoinInfo -> ServerState -> Either Text ServerState
 tryAddPlayerToGame (gId, tok, conn) state = do
     player <- fromMaybe "auth unsuccessful" $
@@ -40,9 +40,6 @@ tryAddPlayerToGame (gId, tok, conn) state = do
     return $ go (player, game, clients)
 
     where
-        fromMaybe _   (Just x) = Right x
-        fromMaybe msg Nothing  = Left msg
-
         go (player, game, clients) =
             let (hId, game') = addHeli game (playerName player)
                 client       = (conn, hId)

@@ -7,6 +7,7 @@ import Data.Text (Text)
 import Data.Aeson
 import qualified Network.WebSockets as WS
 import qualified Network.HTTP.Types.URI as URI
+import qualified Web.Cookie as C
 import Control.Monad
 import Control.Monad.Writer
 import Control.Concurrent.STM
@@ -18,6 +19,7 @@ import Game.Types
 import Game.Game
 import Server.ServerState
 import Conversion
+import EitherUtils
 
 webSocketServerPort :: Int
 webSocketServerPort = 9160
@@ -54,9 +56,6 @@ readEither s = case [ x | (x,"") <- reads (toString s) ] of
                 []  -> Left "readEither: no parse"
                 _   -> Left "readEither: ambiguous parse"
 
-withLeft :: a -> Either a b -> Either a b
-withLeft x = either (const $ Left x) Right
-
 getGameId :: WS.RequestHead -> Either ByteString GameId
 getGameId = getGameId' . pathInfo . URI.decodePath . WS.requestPath
     where pathInfo = fst
@@ -67,13 +66,12 @@ getGameId' ("ws":"games":x:[]) =
 getGameId' _                  = Left "game not found"
 
 getAuthToken :: WS.RequestHead -> Either ByteString ByteString
-getAuthToken = getAuthToken' . query . URI.decodePath . WS.requestPath
-    where query = snd
-
-getAuthToken' :: URI.Query -> Either ByteString ByteString
-getAuthToken' q = case lookup "auth_token" q of
-                    Just (Just x) -> Right x
-                    _             -> Left "auth token not found"
+getAuthToken = fromMaybe "auth token not supplied" .
+    getCookie "auth_token" . WS.requestHeaders
+    where
+        getCookie name headers = do
+            cookies <- fmap C.parseCookies $ lookup "cookie" headers
+            lookup name cookies
 
 tryAddPlayerToGame' :: GameJoinInfo ->
                        TVar ServerState ->
