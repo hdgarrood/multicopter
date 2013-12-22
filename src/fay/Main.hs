@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RebindableSyntax #-}
 module Main where
 
 import Prelude
-import Fay.Text (Text)
+import Fay.Text (Text, fromString)
 import qualified Fay.Text as T
 import JQuery
 import FFI
@@ -29,40 +30,29 @@ initialWorld = World
 getHostname :: Fay Text
 getHostname = ffi "window.location.host"
 
-getWebSocketPath :: Fay Text
+getAttr' :: Text -> JQuery -> Fay (Defined Text)
+getAttr' = ffi "%2['attr'](%1)"
+
+getWebSocketPath :: Fay (Defined Text)
 getWebSocketPath = do
-    elem <- select ("#canvas-container" :: Text)
-    getAttr "data-websocket-path" elem
+    elem <- select "#canvas-container"
+    getAttr' "data-websocket-path" elem
 
-getCookieUnparsed :: Fay Text
-getCookieUnparsed = ffi "document.cookie"
+mapMaybe :: (a -> b) -> Maybe a -> Maybe b
+mapMaybe f (Just x) = Just (f x)
+mapMaybe _ Nothing  = Nothing
 
-type Cookies = [(Text, Text)]
-
-getCookie :: Fay (Maybe Cookies)
-getCookie = do
-    cookie <- getCookieUnparsed
-    return $ parseCookie cookie
-
-parseCookie :: Text -> Maybe Cookies
-parseCookie _ = Nothing
-
-constructWebSocketUrl :: Text -> Fay Text
-constructWebSocketUrl authToken = do
+constructWebSocketUrl :: Fay Text
+constructWebSocketUrl = do
     hostname <- getHostname
-    path <- getWebSocketPath
-    return $ T.concat $
-        [ "ws://"
-        , hostname
-        , path
-        , "?auth_token="
-        , authToken
-        ]
+    Defined path <- getWebSocketPath
+    return $ "ws://" `T.append` hostname `T.append` path
 
 alert :: Text -> Fay ()
 alert = ffi "window.alert(%1)"
 
 main :: Fay ()
 main = do
-    ws <- W.open "ws://echo.websocket.org" W.debugCallbacks
+    url <- constructWebSocketUrl
+    ws <- W.open url W.debugCallbacks
     W.addEventListener ws "open" $ (\_ -> W.send ws "hello")
