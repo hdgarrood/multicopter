@@ -94,7 +94,7 @@ unHeliId (HeliId x) = x
 
 type Position = Int
 type Velocity = Int
-data Direction = Down | Up
+data Direction = Down | Up deriving (Show, Eq)
 
 data Heli = Heli
     { heliId        :: HeliId
@@ -104,6 +104,22 @@ data Heli = Heli
     , heliDirection :: Direction
     , heliIsAlive   :: Bool
     }
+
+instance ToJSON Heli where
+    toJSON (Heli { heliId = hId
+                 , heliName = name
+                 , heliPosition = position
+                 , heliVelocity = velocity
+                 , heliDirection = direction
+                 , heliIsAlive = isAlive
+                 }) =
+        object [ "id" .= unHeliId hId
+               , "name" .= name
+               , "position" .= position
+               , "velocity" .= velocity
+               , "direction" .= show direction
+               , "isAlive" .= isAlive
+               ]
 
 data HeliEvent = ChangedDirection Direction
                | CollidedWithWall
@@ -127,14 +143,14 @@ type HeliInputData = [HeliSignal]
 
 -- Any information sent back to clients regarding a change of state of a heli
 -- is sent back as a HeliChange.
-data HeliChange = HeliAdded HeliId
+data HeliChange = HeliAdded Heli
                 | HeliMoved HeliId Int
                 | HeliCrashed HeliId
 
 instance ToJSON HeliChange where
-    toJSON (HeliAdded hId) =
+    toJSON (HeliAdded heli) =
         object [ "type" .= ("HeliAdded" :: Text)
-               , "data" .= unHeliId hId
+               , "data" .= toJSON heli
                ]
 
     toJSON (HeliMoved hId x) =

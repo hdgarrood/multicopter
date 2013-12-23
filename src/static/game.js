@@ -58,6 +58,25 @@ function shiftPush(arr, item) {
     arr.push(item)
 }
 
+function keyEq(key) {
+    return function(val) {
+        return function(obj) {
+            obj[key] == val
+        }
+    }
+}
+
+function getOne(pred) {
+    return function(arr) {
+        var arr2 = _.filter(arr, pred)
+
+        if (arr2.length == 1)
+            return arr2[0]
+        else
+            throw new Error("getOne: array was not length 1")
+    }
+}
+
 function start() {
     var maxSlicesInWorld = 28,
         world = {
@@ -95,7 +114,14 @@ function start() {
                 var inner = c.data
                 switch inner.type {
                 case "HeliAdded":
+                    world.helis.push(inner.data)
+                    break
                 case "HeliMoved":
+                    var h = getOne(world.helis, keyEq("id")(inner.data["id"]))
+                    h.position += inner.data["dist"]
+                case "HeliCrashed":
+                    var h = getOne(world.helis, keyEq("id")(inner.data["id"]))
+                    h.isAlive = false
                 }
                 break
             }

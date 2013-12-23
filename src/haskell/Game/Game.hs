@@ -26,7 +26,7 @@ addHeli game hName = (hId, game')
     where
         hId     = gameNextHeliId game
         newHeli = makeHeli hId hName
-        newChange = HC $ HeliAdded hId
+        newChange = HC $ HeliAdded newHeli
         game'   = repositionHelis $
             game { gameHelis      = newHeli : gameHelis game
                  , gameNextHeliId = succ hId
