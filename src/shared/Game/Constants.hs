@@ -32,3 +32,40 @@ startingVelocity = 5
 worldAcceleration :: Double
 worldAcceleration = 0.001
 
+-- The height of a slice.
+sliceHeight :: Int
+sliceHeight = 400
+
+-- The mean length of a run of a wall or ceiling at a certain gradient, before
+-- another gradient will be chosen.
+meanSequenceLength :: Double
+meanSequenceLength = 15.0
+
+-- The minimum allowable width of a floor or roof obstacle.
+minEdgeWidth :: Int
+minEdgeWidth = 20
+
+-- The maximum allowable width of a floor or roof obstacle.
+maxEdgeWidth :: Int
+maxEdgeWidth = 70
+
+-- The minimum allowable width of a centre-of-slice obstacle.
+minObstacleWidth :: Int
+minObstacleWidth = 50
+
+-- The maximum allowable width of a centre-of-slice obstacle.
+maxObstacleWidth :: Int
+maxObstacleWidth = 180
+
+-- The mean number of slices between obstacles.
+meanSlicesBetweenObstacles :: Double
+meanSlicesBetweenObstacles = 15.0
+
+-- The number of slices at the start of a game which will have no central
+-- obstacles.
+gracePeriod :: Int
+gracePeriod = 20
+
+-- we need a single 0 so that the whole slice is empty, rather than full.
+emptySlice :: [Int]
+emptySlice = [0]

@@ -70,11 +70,11 @@ data WorldChange = SliceAdded Slice -- A slice was added
 
 instance ToJSON WorldChange where
     toJSON (SliceAdded slice) =
-        object [ "type" .= ("sliceAdded"  :: Text)
+        object [ "type" .= ("SliceAdded"  :: Text)
                , "data" .= slice
                ]
     toJSON (SlicesMoved dist) =
-        object [ "type" .= ("slicesMoved" :: Text)
+        object [ "type" .= ("SlicesMoved" :: Text)
                , "data" .= dist
                ]
 
@@ -122,10 +122,16 @@ type HeliInputData = [HeliSignal]
 
 -- Any information sent back to clients regarding a change of state of a heli
 -- is sent back as a HeliChange.
-data HeliChange = HeliMoved Int
+data HeliChange = HeliAdded HeliId
+                | HeliMoved Int
                 | HeliCrashed
 
 instance ToJSON HeliChange where
+    toJSON (HeliAdded HId) =
+        object [ "type" .= ("HeliAdded" :: Text)
+               , "data" .= unHeliId hId
+               ]
+
     toJSON (HeliMoved x) =
         object [ "type" .= ("HeliMoved" :: Text)
                , "data" .= x

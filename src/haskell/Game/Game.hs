@@ -24,9 +24,14 @@ addHeli game hName = (hId, game')
     where
         hId     = gameNextHeliId game
         newHeli = makeHeli hId hName
-        game'   = game { gameHelis      = newHeli : gameHelis game
-                       , gameNextHeliId = succ hId
-                       }
+        game'   = repositionHelis $
+            game { gameHelis      = newHeli : gameHelis game
+                 , gameNextHeliId = succ hId
+                 }
+
+-- TODO
+repositionHelis :: Game -> Game
+repositionHelis = id
 
 removeHeli :: HeliId -> Game -> Game
 removeHeli hId game = game { gameHelis = helis }

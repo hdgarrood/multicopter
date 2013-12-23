@@ -116,6 +116,6 @@ startGameThread state = do
 
             return updateActions
 
-        threadDelay microsecondsPerStep
         sequence_ updateActions
+        threadDelay microsecondsPerStep
 

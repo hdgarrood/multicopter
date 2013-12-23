@@ -4,6 +4,7 @@ import System.Random
 import Control.Monad.Random
 
 import Game.Types
+import Game.Constants
 
 -- Is an object occupying the vertical space from a to b colliding with any
 -- obstacles in a slice?
@@ -16,45 +17,6 @@ isSliceClear s a b =
             | x < a     = isSliceClear' xs (not state)
             | x < b     = False
             | otherwise = state
-
--- TODO: Make these parameters of SliceGens?
--- The height of a slice.
-sliceHeight :: Int
-sliceHeight = 400
-
--- The mean length of a run of a wall or ceiling at a certain gradient, before
--- another gradient will be chosen.
-meanSequenceLength :: Double
-meanSequenceLength = 15.0
-
--- The minimum allowable width of a floor or roof obstacle.
-minEdgeWidth :: Int
-minEdgeWidth = 20
-
--- The maximum allowable width of a floor or roof obstacle.
-maxEdgeWidth :: Int
-maxEdgeWidth = 70
-
--- The minimum allowable width of a centre-of-slice obstacle.
-minObstacleWidth :: Int
-minObstacleWidth = 50
-
--- The maximum allowable width of a centre-of-slice obstacle.
-maxObstacleWidth :: Int
-maxObstacleWidth = 180
-
--- The mean number of slices between obstacles.
-meanSlicesBetweenObstacles :: Double
-meanSlicesBetweenObstacles = 15.0
-
--- The number of slices at the start of a game which will have no central
--- obstacles.
-gracePeriod :: Int
-gracePeriod = 20
-
--- we need a single 0 so that the whole slice is empty, rather than full.
-emptySlice :: Slice
-emptySlice = [0]
 
 makeSliceGen :: SliceGen
 makeSliceGen =
