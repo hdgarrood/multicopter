@@ -13,11 +13,12 @@ makeGame :: GameId -> Rand StdGen Game
 makeGame gId = do
     world <- makeWorld
     return $ Game
-        { gameId         = gId
-        , gameWorld      = world
-        , gameNextHeliId = HeliId 1
-        , gameHelis      = []
-        , gameState      = NotStarted
+        { gameId             = gId
+        , gameWorld          = world
+        , gameNextHeliId     = HeliId 1
+        , gameHelis          = []
+        , gameState          = NotStarted
+        , gamePendingChanges = []
         }
 
 addHeli :: Game -> Text -> (HeliId, Game)
@@ -25,9 +26,11 @@ addHeli game hName = (hId, game')
     where
         hId     = gameNextHeliId game
         newHeli = makeHeli hId hName
+        newChange = HC $ HeliAdded hId
         game'   = repositionHelis $
             game { gameHelis      = newHeli : gameHelis game
                  , gameNextHeliId = succ hId
+                 , gamePendingChanges = newChange : gamePendingChanges game
                  }
 
 -- TODO
@@ -54,7 +57,7 @@ stepGame :: Game -> InputData -> Writer GameChanges Game
 stepGame game input =
     foldl (>>=) (return game) actions
     where
-        actions = [stepWorld, stepHelis input, checkFinished]
+        actions = [stepWorld, stepHelis input, doPending, checkFinished]
 
 -- TODO
 stepHelis :: InputData -> Game -> Writer GameChanges Game
@@ -66,6 +69,11 @@ stepWorld g = do
     let (world', chs) = runWriter (iterateWorld world)
     tell $ toGameChanges chs
     return $ g { gameWorld = world' }
+
+doPending :: Game -> Writer GameChanges Game
+doPending game@(Game { gamePendingChanges = chs }) = do
+    tell chs
+    return game { gamePendingChanges = [] }
 
 checkFinished :: Game -> Writer GameChanges Game
 checkFinished game =

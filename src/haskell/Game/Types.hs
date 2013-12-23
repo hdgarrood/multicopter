@@ -11,11 +11,12 @@ unGameId :: GameId -> Int
 unGameId (GameId x) = x
 
 data Game = Game
-    { gameId         :: GameId
-    , gameWorld      :: World
-    , gameNextHeliId :: HeliId
-    , gameHelis      :: [Heli]
-    , gameState      :: GameState
+    { gameId             :: GameId
+    , gameWorld          :: World
+    , gameNextHeliId     :: HeliId
+    , gameHelis          :: [Heli]
+    , gameState          :: GameState
+    , gamePendingChanges :: GameChanges
     }
 
 data GameState = NotStarted
@@ -127,8 +128,8 @@ type HeliInputData = [HeliSignal]
 -- Any information sent back to clients regarding a change of state of a heli
 -- is sent back as a HeliChange.
 data HeliChange = HeliAdded HeliId
-                | HeliMoved Int
-                | HeliCrashed
+                | HeliMoved HeliId Int
+                | HeliCrashed HeliId
 
 instance ToJSON HeliChange where
     toJSON (HeliAdded hId) =
@@ -136,13 +137,16 @@ instance ToJSON HeliChange where
                , "data" .= unHeliId hId
                ]
 
-    toJSON (HeliMoved x) =
+    toJSON (HeliMoved hId x) =
         object [ "type" .= ("HeliMoved" :: Text)
-               , "data" .= x
+               , "data" .= object [ "id"   .= unHeliId hId
+                                  , "dist" .= x
+                                  ]
                ]
 
-    toJSON HeliCrashed =
+    toJSON (HeliCrashed hId) =
         object [ "type" .= ("HeliCrashed" :: Text)
+               , "data" .= unHeliId hId
                ]
 
 -- TODO: less naive implementation?
