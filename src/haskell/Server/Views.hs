@@ -30,6 +30,7 @@ defaultLayout headContent content =
         head $ do
             meta ! charset "utf-8"
             scriptTag "/static/jquery-1.10.2.js"
+            styleTag "/static/style.css"
             title "multicopter"
             headContent
         body $ do
@@ -99,15 +100,19 @@ startGame :: Game -> View
 startGame game = viewWithHead headContent bodyContent
     where
         headContent = do
-            scriptTag "/fay/Main.hs"
+            scriptTag "/static/game.js"
 
         bodyContent = do
             button ! id "start-game" $ "Start the game"
             div !
                 id "canvas-container" !
-                dataAttribute "websocket-path" webSocketPath $ ""
+                dataAttribute "websocket-path" webSocketPath $
+                    canvas ! id "canvas" $ ""
 
         webSocketPath = toValue . wsPathForGame $ game
 
 scriptTag :: AttributeValue -> Html
 scriptTag val = script ! type_ "text/javascript" ! src val $ ""
+
+styleTag :: AttributeValue -> Html
+styleTag val = link ! rel "stylesheet" ! type_ "text/css" ! href val
