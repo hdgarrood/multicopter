@@ -1,4 +1,4 @@
-function upto(i, j) {
+function range(i, j) {
     var arr = [],
         val = i
 
@@ -10,8 +10,20 @@ function upto(i, j) {
     return arr
 }
 
+function replicate(n, item) {
+    var arr = [],
+        i = n
+
+    while (i > 0) {
+        arr.push(item)
+        i -= 1
+    }
+
+    return arr
+}
+
 function eachIndex(arr, callback) {
-    _.each(upto(0, arr.length - 1), callback)
+    _.each(range(0, arr.length - 1), callback)
 }
 
 function drawWorld(world, canvas) {
@@ -61,20 +73,40 @@ function shiftPush(arr, item) {
 function keyEq(key) {
     return function(val) {
         return function(obj) {
-            obj[key] == val
+            obj[key] === val
         }
     }
 }
+
+var idEq = keyEq("id")
 
 function getOne(pred) {
     return function(arr) {
         var arr2 = _.filter(arr, pred)
 
-        if (arr2.length == 1)
+        if (arr2.length === 1)
             return arr2[0]
         else
             throw new Error("getOne: array was not length 1")
     }
+}
+
+function errorCallback(msg, obj) {
+    console.log(msg)
+    debugShow(obj)
+}
+
+function debugShow(obj) {
+    $('#alert-heading').text(obj.toString())
+    $('#alert-details').html(showProps(obj))
+}
+
+function showProps(obj) {
+    var text = ""
+    for (var key in obj) {
+        text += ('"' + key.toString() + '": ' + obj[key].toString() + '<br>')
+    }
+    return text
 }
 
 function start() {
@@ -84,47 +116,62 @@ function start() {
             offset: 0,
             helis: []
         },
-        wsUrl = getWebSocketUrl()
+        wsUrl = getWebSocketUrl(),
+        canvas = document.getElementById('canvas')
 
     var ws = new WebSocket(wsUrl)
     ws.addEventListener("open", function(e) { console.log("open!") })
-    ws.addEventListener("error", function(e) { throw e })
-    ws.addEventListener("close", function(e) { console.log("closed." })
+    ws.addEventListener("error", function(e) { errorCallback("error", e) })
+    ws.addEventListener("close", function(e) { errorCallback("close", e) })
 
     ws.addEventListener("message", function(e) {
         var changes = JSON.parse(e.data)
 
         _.each(changes, function(c) {
-            switch c.type {
+            switch (c.type) {
             case "GameStarted":
                 break // todo
             case "GameFinished":
                 break // todo
             case "WorldChange":
                 var inner = c.data
-                switch inner.type {
+                switch (inner.type) {
                 case "SliceAdded":
                     shiftPush(world.slices, inner.data)
                     break
                 case "SlicesMoved":
                     world.offset = inner.data
+                    break
+                default:
+                    throw new Error("unrecognised type " + inner.type)
+                    break
                 }
                 break
             case "HeliChange":
                 var inner = c.data
-                switch inner.type {
+                switch (inner.type) {
                 case "HeliAdded":
                     world.helis.push(inner.data)
                     break
                 case "HeliMoved":
-                    var h = getOne(world.helis, keyEq("id")(inner.data["id"]))
-                    h.position += inner.data["dist"]
+                    var h = getOne(world.helis, idEq(inner.data.id))
+                    h.position += inner.data.dist
+                    break
                 case "HeliCrashed":
-                    var h = getOne(world.helis, keyEq("id")(inner.data["id"]))
+                    var h = getOne(world.helis, idEq(inner.data.id))
                     h.isAlive = false
+                    break
+                default:
+                    throw new Error("unrecognised type " + inner.type)
+                    break
                 }
+                break
+            default:
+                throw new Error("unrecognised type " + c.type)
                 break
             }
         })
+
+    drawWorld(world, canvas)
     })
 }
