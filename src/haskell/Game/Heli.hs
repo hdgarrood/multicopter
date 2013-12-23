@@ -22,8 +22,8 @@ makeHeli hId name = Heli
 shouldStartGame :: HeliInputData -> Bool
 shouldStartGame = any f
     where
-        f (StartTheGame) = True
-        f _              = False
+        f StartTheGame = True
+        f _            = False
 
 getNewDirection :: HeliInputData -> Maybe Direction
 getNewDirection = foldr f Nothing

@@ -87,6 +87,10 @@ instance ToGameChanges WorldChanges where
 -- Helis only move in 1 dimension, which makes it easier. The top of the screen
 -- is x=0; positive is down.
 newtype HeliId = HeliId Int deriving (Eq, Ord, Show, Enum)
+
+unHeliId :: HeliId -> Int
+unHeliId (HeliId x) = x
+
 type Position = Int
 type Velocity = Int
 data Direction = Down | Up
@@ -127,7 +131,7 @@ data HeliChange = HeliAdded HeliId
                 | HeliCrashed
 
 instance ToJSON HeliChange where
-    toJSON (HeliAdded HId) =
+    toJSON (HeliAdded hId) =
         object [ "type" .= ("HeliAdded" :: Text)
                , "data" .= unHeliId hId
                ]

@@ -7,6 +7,7 @@ import Control.Monad.Random
 import Game.Types
 import Game.World
 import Game.Heli
+import Game.Constants
 
 makeGame :: GameId -> Rand StdGen Game
 makeGame gId = do
@@ -31,7 +32,9 @@ addHeli game hName = (hId, game')
 
 -- TODO
 repositionHelis :: Game -> Game
-repositionHelis = id
+repositionHelis game@(Game { gameHelis = helis }) = game { gameHelis = helis' }
+    where
+        helis' = map (\h -> h { heliPosition = sliceHeight `div` 2 }) helis
 
 removeHeli :: HeliId -> Game -> Game
 removeHeli hId game = game { gameHelis = helis }
