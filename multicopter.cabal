@@ -45,11 +45,14 @@ executable multicopter
                     fay-jquery,
                     aeson,
                     wai,
+                    wai-middleware-static,
                     cookie,
                     websockets,
-                    file-embed,
                     ixset,
-                    filepath
+                    filepath,
+                    directory,
+                    time,
+                    old-locale
 
   extensions:       GeneralizedNewtypeDeriving,
                     OverloadedStrings,

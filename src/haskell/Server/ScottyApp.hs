@@ -3,7 +3,6 @@ module Server.ScottyApp where
 import Control.Concurrent.STM
 import Control.Monad (join)
 import Data.Maybe
-import Data.FileEmbed
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
 import Web.Scotty.Trans
@@ -13,13 +12,13 @@ import Network.Wai
 import Network.HTTP.Types
 
 import Server.Types
-import Server.FileEmbedMiddleware
 import Game.Types
 import Server.PlayerRepository
 import Server.GameRepository
 import Server.Views
 import Server.WebM
 import Server.Routing
+import Server.StaticFileMiddleware
 import Conversion
 
 makeCookie :: Text -> Text -> SetCookie
@@ -97,7 +96,7 @@ beforehand = matchAny (function
 startScottyApp :: TVar ServerState -> IO ()
 startScottyApp tvar =
     scottyWebM 3000 tvar $ do
-        middleware $ fileEmbed $(embedDir "src/static")
+        middleware staticFiles
 
         serveFay $
             ( under "/fay"
