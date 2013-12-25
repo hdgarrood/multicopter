@@ -20,6 +20,7 @@ import Game.Game
 import Server.ServerState
 import Conversion
 import EitherUtils
+import Logging
 
 webSocketServerPort :: Int
 webSocketServerPort = 9160
@@ -29,20 +30,33 @@ startWebSocketsApp state = do
     void $ forkIO $ startWebSocketsThread state
     startGameThread state
 
+threadDelaySec :: Double -> IO ()
+threadDelaySec = threadDelay . floor . (* oneMillion)
+    where
+        oneMillion = 10 ^ (6 :: Int)
+
+-- TODO: Remove players from games if they disconnect
 startWebSocketsThread :: TVar ServerState -> IO ()
 startWebSocketsThread state =
     WS.runServer "0.0.0.0" webSocketServerPort $
-        \pc -> do
-            let reqHead = WS.pendingRequest pc
+        \pc -> either (reject pc) (accept pc) (getGameInfo pc)
+    where
+        reject pc err = do
+            putLog $ "rejecting a websocket request: " ++ convert err
+            WS.rejectRequest pc err
 
-            case getGameInfo reqHead of
-                Right info -> do conn <- WS.acceptRequest pc
-                                 let info' = makeGameJoinInfo info conn
-                                 tryAddPlayerToGame' info' state
-                Left err   -> WS.rejectRequest pc err
+        accept pc info = do
+            putLog $ "accepting a websocket request: " ++ show info
+            conn <- WS.acceptRequest pc
+            let info' = makeGameJoinInfo info conn
+            tryAddPlayerToGame' info' state
+            blockIndefinitely
 
-getGameInfo :: WS.RequestHead -> Either ByteString GameInfo
-getGameInfo reqHead = do
+        blockIndefinitely = forever $ threadDelaySec 10
+
+getGameInfo :: WS.PendingConnection -> Either ByteString GameInfo
+getGameInfo req = do
+    let reqHead = WS.pendingRequest req
     gId <- getGameId    reqHead
     tok <- getAuthToken reqHead
     return (gId, tok)
@@ -86,11 +100,8 @@ tryAddPlayerToGame' info state = do
 stepsPerSecond :: Int
 stepsPerSecond = 60
 
-microsecondsPerStep :: Int
-microsecondsPerStep = floor (oneMillion / fromIntegral stepsPerSecond)
-    where
-        oneMillion :: Double
-        oneMillion = (10 :: Double) ^ (6 :: Int)
+secondsPerStep :: Double
+secondsPerStep = 1 / fromIntegral stepsPerSecond
 
 broadcast :: WS.WebSocketsData a => Clients -> a -> IO ()
 broadcast cs msg = forM_ cs $ flip WS.sendTextData msg . fst
@@ -117,5 +128,5 @@ startGameThread state = do
             return updateActions
 
         sequence_ updateActions
-        threadDelay microsecondsPerStep
+        threadDelaySec secondsPerStep
 

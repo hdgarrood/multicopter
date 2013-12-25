@@ -9,6 +9,8 @@ import qualified Data.Text.Encoding      as T
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Text.Lazy.Encoding as LT
 
+import Data.Char
+
 class ConvertTo a where
     fromIntermediate :: BSL.ByteString -> a
 
@@ -52,7 +54,13 @@ instance ConvertTo LT.Text where
 instance ConvertFrom LT.Text where
     toIntermediate = LT.encodeUtf8
 
-
 -- ByteString Builders
 instance ConvertFrom Builder.Builder where
     toIntermediate = Builder.toLazyByteString
+
+-- String
+instance ConvertTo String where
+    fromIntermediate = map (chr . fromIntegral) . BSL.unpack
+
+instance ConvertFrom String where
+    toIntermediate = BSL.pack . map (fromIntegral . ord)
