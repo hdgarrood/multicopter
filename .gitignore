@@ -5,3 +5,4 @@ dist/*
 src/static/from-coffee/*
 .cabal-sandbox
 cabal.sandbox.config
+log/
