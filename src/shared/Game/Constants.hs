@@ -29,6 +29,10 @@ c_sliceWidth = 30
 c_worldWidth :: Int
 c_worldWidth = (c_maxSlicesInWorld - 1) * c_sliceWidth
 
+-- how high is the whole world
+c_worldHeight :: Int
+c_worldHeight = c_sliceHeight
+
 c_startingVelocity :: Double
 c_startingVelocity = 5
 

@@ -14,6 +14,7 @@ import           Server.View
 import           Server.Routing
 import           Server.Types
 import           Game.Types
+import           Game.Constants
 import           Server.ToMarkupInstances()
 import           Conversion()
 
@@ -105,10 +106,8 @@ startGame game = viewWithHead headContent bodyContent
 
         bodyContent = do
             button ! id "start-game" $ "Start the game"
-            div !
-                id "canvas-container" !
-                dataAttribute "websocket-path" webSocketPath $
-                    canvas ! id "canvas" $ ""
+            div ! id "canvas-container" ! dataAttribute "websocket-path" webSocketPath $
+                canvas ! id "canvas" ! width (toValue c_worldWidth) ! height (toValue c_worldHeight) $ ""
 
         webSocketPath = toValue . wsPathForGame $ game
 
