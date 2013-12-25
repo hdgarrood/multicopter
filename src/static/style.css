@@ -1,10 +1,19 @@
+/*
+    color scheme:
+    #98ed00
+    #b6f63e
+    #c7f66f
+    #659a00
+*/
+
 html {
     background-color: #333;
-    color: #bbb;
+    color: #ccc;
+    font-family: "liberation sans", "calibri", "helvetica", sans-serif;
 }
 
 a {
-    color: #ebe;
+    color: #98ed00;
     text-decoration: none;
     font-weight: bold;
 }
@@ -16,6 +25,11 @@ a:hover {
 input[type='button'],
 input[type='submit'],
 button {
-    color: #ebe;
-    background-color: #445;
+    color: #98ed00;
+    background-color: #292929;
+    border: 1px solid;
+    border-radius: 5px;
+    font-family: "liberation sans", "calibri", "helvetica", sans-serif;
 }
+
+/* change me */
