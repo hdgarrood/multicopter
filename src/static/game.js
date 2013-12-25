@@ -27,16 +27,19 @@ function eachIndex(arr, callback) {
 }
 
 function drawWorld(world, canvas) {
-	var context = canvas.getContext('2d'),
-		width = canvas.width,
-		slices = world.slices,
-		offset = world.offset,
-		sliceWidth = 30
+    var context = canvas.getContext('2d'),
+        width = canvas.width,
+        slices = world.slices,
+        helis = world.helis,
+        offset = world.offset,
+        sliceWidth = 30
 
-	eachIndex(slices, function(i) {
+    eachIndex(slices, function(i) {
         drawSlice(slices[i], context, sliceWidth,
             { x: sliceWidth * i - offset, y: 0 })
     })
+
+    _.each(helis, drawHeli(context))
 }
 
 function drawSlice(slice, context, width, pos) {
@@ -57,11 +60,41 @@ function drawSlice(slice, context, width, pos) {
     context.fillRect(xStart, currentY, xEnd, context.canvas.height)
 }
 
+function drawHeli(context) {
+    return function(heli) {
+        var c = getGameConstants()
+
+        context.fillStyle = "red"
+        context.fillRect(heli.x, heli.y,
+                heli.x + c.heliWidth, heli.y + c.heliHeight)
+    }
+}
+
 function getWebSocketUrl() {
     var host = window.location.host,
         path = $('#canvas-container').attr('data-websocket-path')
 
     return ["ws://", host, path].join('')
+}
+
+var Memoized = {}
+
+function getGameConstants() {
+    function go() {
+        $.ajax("/game-constants.json", { dataType: "json" })
+            .done(function(data) {
+                Memoized.gameConstants = data
+            })
+    }
+
+    if (Memoized.gameConstants !== null)
+        return Memoized.gameConstants
+    else
+        // FIX ME -- this is totally broken
+        return go().done(function(res) {
+            Memoized.gameConstants = res
+            return res
+        })
 }
 
 function shiftPush(arr, item) {

@@ -1,11 +1,13 @@
 module Game.Constants where
 
 import Data.Aeson
+import qualified Data.Text as T
 import Language.Haskell.Extract
 
 -- All constants, as a JavaScript object value, mapping names to values.
 allConstants :: Value
-allConstants = object $(functionExtractorMap "^c_" [| \k v -> k .= v |])
+allConstants = object $
+    $(functionExtractorMap "^c_" [| \k v -> (T.drop 2 k) .= v |])
 
 c_heliXPosition :: Int
 c_heliXPosition = 50

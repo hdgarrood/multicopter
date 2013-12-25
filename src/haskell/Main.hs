@@ -27,4 +27,5 @@ main = do
             })
         scottyAppPart
 
+    -- TODO: fix "send: resource vanished (broken pipe)" crash
     startGameThread tvar

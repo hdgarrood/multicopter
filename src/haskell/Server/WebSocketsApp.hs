@@ -107,7 +107,9 @@ startGameThread state = do
             results <- forM games $ \(game, clients) -> do
                 let (game', changes) = runWriter $ stepGame game InputData
                 let message = encode changes
-                let update = broadcast clients message
+                let update = do
+                    putLog $ "sending: " ++ convert message
+                    broadcast clients message
                 return ((game', clients), update)
 
             let games'        = map fst results
