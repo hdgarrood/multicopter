@@ -22,14 +22,19 @@ a:hover {
     text-decoration: underline;
 }
 
-input[type='button'],
-input[type='submit'],
-button {
-    color: #98ed00;
-    background-color: #292929;
+input, button {
+    color: #bbb;
+    background-color: #232323;
     border: 1px solid;
     border-radius: 5px;
     font-family: "liberation sans", "calibri", "helvetica", sans-serif;
+    margin: 5px;
+    padding: 2px;
 }
 
-/* change me */
+input[type="button"],
+input[type="submit"],
+button {
+    color: #98ed00;
+    border: 2px solid;
+}
