@@ -45,7 +45,7 @@ executable multicopter
                     fay-jquery,
                     aeson,
                     wai,
-                    wai-middleware-static,
+                    wai-app-static,
                     cookie,
                     websockets,
                     ixset,
