@@ -30,6 +30,7 @@ defaultLayout headContent content =
         head $ do
             meta ! charset "utf-8"
             scriptTag "/static/jquery-1.10.2.js"
+            scriptTag "/static/underscore.js"
             styleTag "/static/style.css"
             title "multicopter"
             headContent
