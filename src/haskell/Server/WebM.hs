@@ -4,15 +4,12 @@ import Data.Text.Lazy (Text)
 import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad.Reader
+import Network.Wai (Application)
 
 import Server.Types
 
-scottyWebM :: Int -> TVar ServerState -> ScottyT Text WebM () -> IO ()
-scottyWebM port tvar app =
-    scottyT port runM runActionToIO app
-    where
-        runM m = runReaderT (runWebM m) tvar
-        runActionToIO = runM
+scottyAppWebM :: TVar ServerState -> Scotty' () -> IO Application
+scottyAppWebM tvar app = scottyAppT (unWebM tvar) (unWebM tvar) app
 
 webM :: MonadTrans t => WebM a -> t WebM a
 webM = lift

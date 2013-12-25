@@ -46,6 +46,8 @@ executable multicopter
                     aeson,
                     wai,
                     wai-app-static,
+                    wai-websockets,
+                    warp,
                     cookie,
                     websockets,
                     ixset,

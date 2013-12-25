@@ -58,11 +58,10 @@ function drawSlice(slice, context, width, pos) {
 }
 
 function getWebSocketUrl() {
-    var hostname = window.location.hostname,
-        port = "9160",
+    var host = window.location.host,
         path = $('#canvas-container').attr('data-websocket-path')
 
-    return ["ws://", hostname, ":", port, path].join('')
+    return ["ws://", host, path].join('')
 }
 
 function shiftPush(arr, item) {

@@ -105,7 +105,6 @@ startGame game = viewWithHead headContent bodyContent
             scriptTag "/static/game.js"
 
         bodyContent = do
-            button ! id "start-game" $ "Start the game"
             div ! id "canvas-container" ! dataAttribute "websocket-path" webSocketPath $
                 canvas ! id "canvas" ! width (toValue c_worldWidth) ! height (toValue c_worldHeight) $ ""
 

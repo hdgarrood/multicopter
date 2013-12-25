@@ -11,7 +11,7 @@ import qualified Web.Cookie as C
 import Control.Monad
 import Control.Monad.Writer
 import Control.Concurrent.STM
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (threadDelay)
 
 import Server.Types
 import Server.GameRepository
@@ -22,24 +22,15 @@ import Conversion
 import EitherUtils
 import Logging
 
-webSocketServerPort :: Int
-webSocketServerPort = 9160
-
-startWebSocketsApp :: TVar ServerState -> IO ()
-startWebSocketsApp state = do
-    void $ forkIO $ startWebSocketsThread state
-    startGameThread state
-
 threadDelaySec :: Double -> IO ()
 threadDelaySec = threadDelay . floor . (* oneMillion)
     where
         oneMillion = 10 ^ (6 :: Int)
 
 -- TODO: Remove players from games if they disconnect
-startWebSocketsThread :: TVar ServerState -> IO ()
-startWebSocketsThread state =
-    WS.runServer "0.0.0.0" webSocketServerPort $
-        \pc -> either (reject pc) (accept pc) (getGameInfo pc)
+multicopterWebSocketsApp :: TVar ServerState -> WS.ServerApp
+multicopterWebSocketsApp state = \pc ->
+        either (reject pc) (accept pc) (getGameInfo pc)
     where
         reject pc err = do
             putLog $ "rejecting a websocket request: " ++ convert err

@@ -93,36 +93,35 @@ beforehand :: Action' () -> Scotty' ()
 beforehand = matchAny (function
     (\req -> Just [("path", convert $ rawPathInfo req)]))
 
-startScottyApp :: TVar ServerState -> IO ()
-startScottyApp tvar =
-    scottyWebM 3000 tvar $ do
-        middleware staticFiles
-        beforehand ensureAuthenticated
+multicopterScottyApp :: TVar ServerState -> IO Application
+multicopterScottyApp tvar = scottyAppWebM tvar $ do
+    middleware staticFiles
+    beforehand ensureAuthenticated
 
-        get "/game-constants.json" $ json allConstants
+    get "/game-constants.json" $ json allConstants
 
-        get "/register" $ do
-            -- by this point, we've already logged in
-            redirect "/"
+    get "/register" $ do
+        -- by this point, we've already logged in
+        redirect "/"
 
-        get "/" $ do
-            player <- getCurrentPlayer'
-            games  <- webM $ gets (getAllGames' . serverGames)
-            render $ homePage (playerName player) games
+    get "/" $ do
+        player <- getCurrentPlayer'
+        games  <- webM $ gets (getAllGames' . serverGames)
+        render $ homePage (playerName player) games
 
-        get "/registered-players" $ do
-            players <- webM $ gets (getAllPlayers . serverPlayers)
-            render (registeredPlayers players)
+    get "/registered-players" $ do
+        players <- webM $ gets (getAllPlayers . serverPlayers)
+        render (registeredPlayers players)
 
-        get "/games/:id" $ do
-            gId  <- fmap GameId $ param "id"
-            game <- webM $ gets (getGameById gId . serverGames)
-            case game of
-                Just (x,_) -> render $ startGame x
-                Nothing    -> do status notFound404
-                                 render gameNotFound
+    get "/games/:id" $ do
+        gId  <- fmap GameId $ param "id"
+        game <- webM $ gets (getGameById gId . serverGames)
+        case game of
+            Just (x,_) -> render $ startGame x
+            Nothing    -> do status notFound404
+                             render gameNotFound
 
-        post "/games" $ do
-            game <- webM $ modifyGamesWith addGame
-            redirect (pathForGame game)
+    post "/games" $ do
+        game <- webM $ modifyGamesWith addGame
+        redirect (pathForGame game)
 

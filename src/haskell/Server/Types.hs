@@ -18,6 +18,9 @@ import Game.Types
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
     deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
 
+unWebM :: TVar ServerState -> WebM a -> IO a
+unWebM tvar = flip runReaderT tvar . runWebM
+
 -- Handy aliases
 type Scotty' = ScottyT Text WebM
 type Action' = ActionT Text WebM
