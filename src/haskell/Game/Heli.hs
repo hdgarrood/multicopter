@@ -49,11 +49,11 @@ isWorldClear w h = check slices
     where
         check  = all (\s -> isSliceClear s top bottom)
         top    = heliPosition h
-        bottom = top + heliHeight
+        bottom = top + c_heliHeight
 
         slices = overlappingSlices (left, right) w
-        left   = heliXPosition
-        right  = left + heliWidth
+        left   = c_heliXPosition
+        right  = left + c_heliWidth
 
 doLogic :: Heli -> HeliEvents -> Writer [HeliChange] Heli
 doLogic h _ = return h

@@ -6,13 +6,13 @@ import Data.Maybe
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
 import Web.Scotty.Trans
-import Web.Scotty.Fay
 import Web.Cookie
 import Network.Wai
 import Network.HTTP.Types
 
 import Server.Types
 import Game.Types
+import Game.Constants
 import Server.PlayerRepository
 import Server.GameRepository
 import Server.Views
@@ -97,14 +97,9 @@ startScottyApp :: TVar ServerState -> IO ()
 startScottyApp tvar =
     scottyWebM 3000 tvar $ do
         middleware staticFiles
-
-        serveFay $
-            ( under "/fay"
-            . fromDirs ["src/fay", "src/shared"]
-            . withPackages ["fay-text", "fay-jquery"]
-            )
-
         beforehand ensureAuthenticated
+
+        get "/game-constants.json" $ json allConstants
 
         get "/register" $ do
             -- by this point, we've already logged in
@@ -130,3 +125,4 @@ startScottyApp tvar =
         post "/games" $ do
             game <- webM $ modifyGamesWith addGame
             redirect (pathForGame game)
+

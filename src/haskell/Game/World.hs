@@ -21,10 +21,10 @@ makeWorld :: Rand StdGen World
 makeWorld = do
     gen <- getSplit
     return $ World
-        { worldSlices           = replicate maxSlicesInWorld emptySlice
+        { worldSlices           = replicate c_maxSlicesInWorld c_emptySlice
         , worldSliceGen         = makeSliceGen
         , worldOffset           = 0
-        , worldVelocity         = startingVelocity
+        , worldVelocity         = c_startingVelocity
         , worldRandomGen        = gen
         }
 
@@ -42,7 +42,7 @@ updateSlices world =
 
 needsNewSlice :: World -> Bool
 needsNewSlice w =
-    floor (worldOffset w) >= sliceWidth
+    floor (worldOffset w) >= c_sliceWidth
 
 shiftSlices :: World -> Writer WorldChanges World
 shiftSlices world = do
@@ -53,7 +53,7 @@ shiftSlices world = do
     let sls     = worldSlices world
     -- TODO: choose a data structure with better appending
     let sls'    = drop 1 sls ++ [newSlice]
-    let offset' = worldOffset world - (fromIntegral sliceWidth)
+    let offset' = worldOffset world - (fromIntegral c_sliceWidth)
 
     tell $ [SliceAdded newSlice]
     return world { worldSliceGen  = sliceGen'
@@ -65,7 +65,7 @@ shiftSlices world = do
 updateOffset :: World -> Writer WorldChanges World
 updateOffset world = do
     let vel     = worldVelocity world
-    let vel'    = vel + worldAcceleration
+    let vel'    = vel + c_worldAcceleration
     let offset' = worldOffset world + vel'
 
     tell $ [SlicesMoved $ round offset']
@@ -82,5 +82,5 @@ overlappingSlices (left, right) w =
     (dropWhile (not . overlaps . fst)) $
     slicesWithX
     where
-        slicesWithX = zip (map (* sliceWidth) [0..]) (worldSlices w)
-        overlaps sliceX = left < (sliceX + sliceWidth) || right > sliceX
+        slicesWithX = zip (map (* c_sliceWidth) [0..]) (worldSlices w)
+        overlaps sliceX = left < (sliceX + c_sliceWidth) || right > sliceX

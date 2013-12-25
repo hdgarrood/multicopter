@@ -37,7 +37,7 @@ addHeli game hName = (hId, game')
 repositionHelis :: Game -> Game
 repositionHelis game@(Game { gameHelis = helis }) = game { gameHelis = helis' }
     where
-        helis' = map (\h -> h { heliPosition = sliceHeight `div` 2 }) helis
+        helis' = map (\h -> h { heliPosition = c_sliceHeight `div` 2 }) helis
 
 removeHeli :: HeliId -> Game -> Game
 removeHeli hId game = game { gameHelis = helis }

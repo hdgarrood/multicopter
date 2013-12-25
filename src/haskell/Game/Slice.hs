@@ -31,13 +31,13 @@ makeEdgeWidthGen =
     EdgeWidthGen
         { remainingSlicesInSequence = 0
         , currentGradient           = 0
-        , currentWidth              = (maxEdgeWidth + minEdgeWidth) `div` 2
+        , currentWidth              = (c_maxEdgeWidth + c_minEdgeWidth) `div` 2
         }
 
 makeObstacleGen :: ObstacleGen
 makeObstacleGen =
     ObstacleGen
-        { slicesUntilNextObstacle = gracePeriod
+        { slicesUntilNextObstacle = c_gracePeriod
         }
 
 nextEdgeWidth :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
@@ -59,10 +59,10 @@ continueEdgeSequence gen =
 startNewEdgeSequence :: EdgeWidthGen -> Rand StdGen (Int, EdgeWidthGen)
 startNewEdgeSequence gen = do
     param             <- getRandomR (0, 1) :: Rand StdGen Double
-    let newLength     =  makePoisson meanSequenceLength $ param
+    let newLength     =  makePoisson c_meanSequenceLength $ param
     let width         =  currentWidth gen
-    let gradientRange =  ((minEdgeWidth - width) `div` newLength,
-                          (maxEdgeWidth - width) `div` newLength)
+    let gradientRange =  ((c_minEdgeWidth - width) `div` newLength,
+                          (c_maxEdgeWidth - width) `div` newLength)
 
     newGradient       <- getRandomR gradientRange
     let gen'          =  gen { remainingSlicesInSequence = newLength
@@ -93,11 +93,11 @@ continueObstacleSequence gen slice =
 startNewObstacleSequence ::
     ObstacleGen -> Slice -> Rand StdGen (Slice, ObstacleGen)
 startNewObstacleSequence gen slice = do
-    let cdf             =  makePoisson meanSlicesBetweenObstacles
+    let cdf             =  makePoisson c_meanSlicesBetweenObstacles
     param               <- getRandomR (0, 1) :: Rand StdGen Double
     let slicesUntilNext =  cdf param
 
-    obstacleWidth       <- getRandomR (minObstacleWidth, maxObstacleWidth)
+    obstacleWidth       <- getRandomR (c_minObstacleWidth, c_maxObstacleWidth)
 
     let roofW           =  slice !! 0
     let floorW          =  slice !! 1 -- to avoid shadowing Prelude.floor
@@ -115,7 +115,7 @@ nextSlice gen = do
     -- Generate the floor
     let floorGen            =  floorWidthGen gen
     (floorWidth, floorGen') <- nextEdgeWidth floorGen
-    let floorWidth'         =  sliceHeight - floorWidth
+    let floorWidth'         =  c_sliceHeight - floorWidth
     let slice               =  [floorWidth']
 
     -- Generate the roof
