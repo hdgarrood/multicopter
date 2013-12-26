@@ -42,6 +42,10 @@ c_startingVelocity = 5
 c_worldAcceleration :: Double
 c_worldAcceleration = 0.001
 
+-- The fastest the world is allowed to go
+c_maxVelocity :: Double
+c_maxVelocity = 15
+
 -- The height of a slice.
 c_sliceHeight :: Int
 c_sliceHeight = 400

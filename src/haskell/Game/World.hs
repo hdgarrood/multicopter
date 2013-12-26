@@ -65,13 +65,16 @@ shiftSlices world = do
 updateOffset :: World -> Writer WorldChanges World
 updateOffset world = do
     let vel     = worldVelocity world
-    let vel'    = vel + c_worldAcceleration
+    let vel'    = updateVelocity vel
     let offset' = worldOffset world + vel'
 
     tell $ [SlicesMoved $ round offset']
     return world { worldOffset = offset'
                  , worldVelocity = vel'
                  }
+
+    where
+    updateVelocity v = min (v + c_worldAcceleration) c_maxVelocity
 
 -- If a rectangular object is occupying the space (left edge, right edge) in
 -- the World, return the slices that it overlaps

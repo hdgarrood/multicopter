@@ -98,6 +98,10 @@ function prepareGameConstants(callback) {
         })
 }
 
+function getGameConstants() {
+    return PreparedValues.gameConstants
+}
+
 function prepareSprites(callback) {
     // TODO
     callback()
@@ -110,10 +114,6 @@ function prepare(callback) {
 }
 
 // in-game stuff
-function getGameConstants() {
-    return MemoizedValues.gameConstants
-}
-
 function drawWorld(world, canvas) {
     var context = canvas.getContext('2d'),
         width = canvas.width,
@@ -250,3 +250,9 @@ function start() {
     drawWorld(world, canvas)
     })
 }
+
+$(document).ready(function() {
+    prepare(function() {
+        start()
+    })
+})
