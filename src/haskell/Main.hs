@@ -22,8 +22,9 @@ main = do
     -- TODO: websockets: Catch MalformedRequests and handle sensibly
     void $ forkIO $ runSettings
         (defaultSettings
-            { settingsIntercept = intercept webSocketPart
-            , settingsPort = port
+            { settingsIntercept       = intercept webSocketPart
+            , settingsPort            = port
+            , settingsFdCacheDuration = 0 -- work around wai issue #210
             })
         scottyAppPart
 

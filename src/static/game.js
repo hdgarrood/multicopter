@@ -1,3 +1,4 @@
+// General utility functions
 function range(i, j) {
     var arr = [],
         val = i
@@ -24,6 +25,93 @@ function replicate(n, item) {
 
 function eachIndex(arr, callback) {
     _.each(range(0, arr.length - 1), callback)
+}
+
+// Make a lisp-style list.
+function makeList() {
+    function go(args) {
+        if (args.length === 0)
+            return { type: 'empty-list' }
+        else
+            return { type: 'cons-list',
+                     head: args[0],
+                     tail: go(args.slice(1)) }
+    }
+
+    if (arguments.length === 1 && _.isArray(arguments[0]))
+        return go(arguments[0])
+    else
+        return go(_.toArray(arguments))
+}
+
+function isEmpty(list) {
+    return list.type === 'empty-list'
+}
+
+function shiftPush(arr, item) {
+    arr.shift()
+    arr.push(item)
+}
+
+function keyEq(key) {
+    return function(val) {
+        return function(obj) {
+            obj[key] === val
+        }
+    }
+}
+
+var idEq = keyEq("id")
+
+function getOne(pred) {
+    return function(arr) {
+        var arr2 = _.filter(arr, pred)
+
+        if (arr2.length === 1)
+            return arr2[0]
+        else
+            throw new Error("getOne: array was not length 1")
+    }
+}
+
+// Given a list of asynchronous functions (which take a single argument:
+// a callback to run after completion) run them all in a row, using the second
+// argument as a callback to notify when they're finished.
+function chainAsync(list, callback) {
+    if (isEmpty(list))
+        callback()
+    else
+        list.head(function() { chainAsync(list.tail, callback) })
+}
+
+// Preparation: stuff that has to happen at the beginning
+// All of these functions take a single parameter, which will be a callback to
+// indicate that the function is finished.
+
+var PreparedValues = {}
+
+function prepareGameConstants(callback) {
+    $.ajax("/game-constants.json", { dataType: "json" })
+        .done(function(data) {
+            PreparedValues.gameConstants = data
+            callback()
+        })
+}
+
+function prepareSprites(callback) {
+    // TODO
+    callback()
+}
+
+function prepare(callback) {
+    var actions = makeList(prepareGameConstants, prepareSprites)
+
+    chainAsync(actions, callback)
+}
+
+// in-game stuff
+function getGameConstants() {
+    return MemoizedValues.gameConstants
 }
 
 function drawWorld(world, canvas) {
@@ -77,51 +165,6 @@ function getWebSocketUrl() {
     return ["ws://", host, path].join('')
 }
 
-var Memoized = {}
-
-function getGameConstants() {
-    function go() {
-        $.ajax("/game-constants.json", { dataType: "json" })
-            .done(function(data) {
-                Memoized.gameConstants = data
-            })
-    }
-
-    if (Memoized.gameConstants !== null)
-        return Memoized.gameConstants
-    else
-        // FIX ME -- this is totally broken
-        return go().done(function(res) {
-            Memoized.gameConstants = res
-            return res
-        })
-}
-
-function shiftPush(arr, item) {
-    arr.shift()
-    arr.push(item)
-}
-
-function keyEq(key) {
-    return function(val) {
-        return function(obj) {
-            obj[key] === val
-        }
-    }
-}
-
-var idEq = keyEq("id")
-
-function getOne(pred) {
-    return function(arr) {
-        var arr2 = _.filter(arr, pred)
-
-        if (arr2.length === 1)
-            return arr2[0]
-        else
-            throw new Error("getOne: array was not length 1")
-    }
-}
 
 function errorCallback(msg, obj) {
     console.log(msg)
