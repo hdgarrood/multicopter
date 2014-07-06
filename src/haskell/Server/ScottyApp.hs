@@ -6,6 +6,9 @@ import Data.Maybe
 import Data.Text.Lazy
 import qualified Data.ByteString as BS
 import Web.Scotty.Trans
+    ( header, setHeader, param, status, post, get, redirect, next, request,
+      rescue, matchAny, function, middleware, json
+    )
 import Web.Cookie
 import Network.Wai
 import Network.HTTP.Types
@@ -46,7 +49,7 @@ ensureAuthenticated = do
 
 getAuthToken :: Action' (Maybe BS.ByteString)
 getAuthToken = do
-    cookieHeader <- reqHeader "Cookie"
+    cookieHeader <- header "Cookie"
     return $ extract cookieHeader
     where
         extract :: Maybe Text -> Maybe BS.ByteString

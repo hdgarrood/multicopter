@@ -6,6 +6,8 @@ import qualified Data.ByteString as B
 import Data.Text (Text)
 import Data.Aeson
 import qualified Network.WebSockets as WS
+import Network.Wai.Handler.WebSockets as WS
+import qualified Network.Wai as Wai
 import qualified Network.HTTP.Types.URI as URI
 import qualified Web.Cookie as C
 import Control.Monad
@@ -26,6 +28,12 @@ threadDelaySec :: Double -> IO ()
 threadDelaySec = threadDelay . floor . (* oneMillion)
     where
         oneMillion = 10 ^ (6 :: Int)
+
+multicopterWebSocketsMiddleware ::
+    TVar ServerState -> Wai.Application -> Wai.Application
+multicopterWebSocketsMiddleware tvar =
+    let app = multicopterWebSocketsApp tvar
+    in  WS.websocketsOr WS.defaultConnectionOptions app
 
 -- TODO: Remove players from games if they disconnect
 multicopterWebSocketsApp :: TVar ServerState -> WS.ServerApp
