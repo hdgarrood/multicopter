@@ -18,9 +18,9 @@ main = do
     scottyAppPart <- multicopterScottyApp tvar
     let withWebSocketsPart = multicopterWebSocketsMiddleware tvar
     let fullApp = withWebSocketsPart scottyAppPart
-    let settings = ( setPort port
-                   . setFdCacheDuration 0 -- work around wai issue #210
-                   ) defaultSettings
+    let settings = setPort port
+                 . setFdCacheDuration 0 -- work around wai issue #210
+                 $ defaultSettings
 
     -- TODO: websockets: Catch MalformedRequests and handle sensibly
     void . forkIO $ runSettings settings fullApp
