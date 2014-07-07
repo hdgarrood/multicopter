@@ -1,6 +1,5 @@
 module Server.WebM where
 
-import Data.Text.Lazy (Text)
 import Web.Scotty.Trans
 import Control.Concurrent.STM
 import Control.Monad.Reader

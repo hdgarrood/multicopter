@@ -1,5 +1,6 @@
 module Server.Types where
 
+import Control.Applicative (Applicative)
 import Control.Monad.Reader
 import Control.Concurrent.STM
 import qualified Network.WebSockets as WS
@@ -16,7 +17,8 @@ import Game.Types
 -- Scotty things
 -- A type for accessing a TVar ServerState inside a Scotty action
 newtype WebM a = WebM { runWebM :: ReaderT (TVar ServerState) IO a }
-    deriving (Monad, Functor, MonadIO, MonadReader (TVar ServerState))
+    deriving (Monad, Applicative, Functor,
+            MonadIO, MonadReader (TVar ServerState))
 
 unWebM :: TVar ServerState -> WebM a -> IO a
 unWebM tvar = flip runReaderT tvar . runWebM
