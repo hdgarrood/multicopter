@@ -13,7 +13,7 @@ import qualified Web.Cookie as C
 import Control.Monad
 import Control.Monad.Writer
 import Control.Concurrent.STM
-import Control.Concurrent (threadDelay)
+import Control.Concurrent (threadDelay, yield)
 
 import Server.Types
 import Server.GameRepository
@@ -51,7 +51,7 @@ multicopterWebSocketsApp state = \pc ->
             tryAddPlayerToGame' info' state
             blockIndefinitely
 
-        blockIndefinitely = forever $ threadDelaySec 10
+        blockIndefinitely = forever $ threadDelaySec 10 >> yield
 
 getGameInfo :: WS.PendingConnection -> Either ByteString GameInfo
 getGameInfo req = do
